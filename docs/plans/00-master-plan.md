@@ -41,6 +41,7 @@
 
 | ID | 시점 | 사람이 할 일 | 왜 사람인가 | 안 하면 |
 | --- | --- | --- | --- | --- |
+| **HOLD-0** | 지금 | 저장소 Settings → General → Default branch 를 **`main`** 으로 변경 | 저장소 설정 권한은 소유자만 | 모든 PR 의 base 가 없다 |
 | **HOLD-1** | M1 중 | 저장소 Settings → Pages → Source 를 **GitHub Actions** 로 변경 | 저장소 설정 권한은 소유자만 | deploy 잡이 실패한다 |
 | **HOLD-2** | M1 중 | `@cas/spec-sync` 반입 방식 승인 (**vendoring 권장**) | 다른 저장소(비공개) 코드를 복사하는 결정 | 테스트 게이트를 못 만든다 |
 | **HOLD-3** | 각 단계 종료 | PR 리뷰 · 머지 | 승인 권한 | 다음 단계 진행 불가 |

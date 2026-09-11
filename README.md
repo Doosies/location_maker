@@ -36,8 +36,8 @@
 
 | 문서 | 내용 |
 | --- | --- |
-| [00-master-plan.md](docs/plans/00-master-plan.md) | 단계 개요, **사람이 개입해야 하는 지점 9곳**, 진행 규칙 |
-| [TODO.md](docs/plans/TODO.md) | 44줄 실행 체크리스트 |
+| [00-master-plan.md](docs/plans/00-master-plan.md) | 단계 개요, **사람이 개입해야 하는 지점 10곳**, 진행 규칙 |
+| [TODO.md](docs/plans/TODO.md) | 45줄 실행 체크리스트 |
 | `01-m1` ~ `07-m7` | 단계별 상세 |
 
 ## 키 취급 규칙

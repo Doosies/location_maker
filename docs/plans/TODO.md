@@ -11,6 +11,7 @@
 
 | # | 작업 | 담당 | Step | 순서 | 의존성 | 스킬 |
 | --- | --- | --- | --- | --- | --- | --- |
+| 0 | **HOLD-0** 저장소 Settings → General → Default branch = `main` | **사람** | M1 | 0 (직렬) | 없음 | — |
 | 1 | Vite + React + TS 스캐폴드, `base: '/location_maker/'` | 에이전트 | M1 | 1 (직렬) | 없음 | — |
 | 2 | Vitest(node·jsdom) · Playwright 설정 | 에이전트 | M1 | 2 (직렬) | 1 | — |
 | 3 | **HOLD-2** `@cas/spec-sync` 반입 방식 승인 (vendoring 권장) | **사람** | M1 | 3 (직렬) | 2 | — |
@@ -58,10 +59,11 @@
 
 ## 사람이 할 일만 모아 보기
 
-순서대로 아홉 번이다.
+순서대로 열 번이다.
 
 | # | 무엇 | 어디서 | 언제 |
 | --- | --- | --- | --- |
+| 0 | 기본 브랜치를 `main` 으로 | 저장소 Settings → General | 지금 |
 | 3 | spec-sync 반입 방식 승인 | 스레드에서 한마디 | M1 중 |
 | 7 | Pages Source 를 GitHub Actions 로 | 저장소 Settings → Pages | M1 중 |
 | 14 | Kakao SDK 시그니처 대조 | Kakao 공식 문서 | M3 착수 전 |
