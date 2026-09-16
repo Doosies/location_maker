@@ -19,6 +19,20 @@ export type AppProps = {
   store?: Store;
 };
 
+/** 입력창에서 `raw` 와 같은 줄을 찾아 선택한다. 없으면 포커스만 옮긴다. */
+function selectLine(field: HTMLTextAreaElement | null, raw: string): void {
+  if (field === null) return;
+  field.focus();
+
+  const lines = field.value.split('\n');
+  const index = lines.findIndex((line) => normalizeLine(line) === raw);
+  if (index === -1) return;
+
+  // 줄 시작 오프셋 = 앞 줄들의 길이 합 + 그만큼의 줄바꿈
+  const start = lines.slice(0, index).reduce((sum, line) => sum + line.length + 1, 0);
+  field.setSelectionRange(start, start + (lines[index]?.length ?? 0));
+}
+
 export function App({ port, store = defaultStore }: AppProps) {
   const [text, setText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -68,32 +82,39 @@ export function App({ port, store = defaultStore }: AppProps) {
    * 비교는 파서와 **같은 규칙**으로 한다. `line.trim()` 으로 비교하면 입력창의
    * `1. 서울…` 과 항목의 `서울…` 이 달라 보여 같은 주소가 한 줄 더 붙는다.
    */
+  /**
+   * 실패한 줄의 원문을 입력창으로 되돌린다.
+   *
+   * 입력창을 통째로 덮어쓰지 않는다 — 그러면 나머지 줄이 사라진다. 그 줄이 이미
+   * 있으면 **그 줄을 선택해 보여 주고**, 없으면 끝에 붙인 뒤 선택한다. 포커스만
+   * 옮기면 줄이 서른 개일 때 어느 줄을 고쳐야 하는지 알 수 없다.
+   *
+   * 비교는 파서와 **같은 규칙**으로 한다. `line.trim()` 으로 비교하면 입력창의
+   * `1. 서울…` 과 항목의 `서울…` 이 달라 보여 같은 주소가 한 줄 더 붙는다.
+   */
   const retry = useCallback((entry: Entry) => {
-    setText((current) => {
-      const lines = current.split(/\r?\n/);
-      const found = lines.findIndex((line) => normalizeLine(line) === entry.raw);
-      const next = found === -1 ? [...lines, entry.raw].join('\n').replace(/^\n+/, '') : current;
-      // setState 안에서 DOM 을 만지지 않는다. 다음 줄의 선택은 상태가 반영된 뒤에 한다.
-      pendingSelection.current = entry.raw;
-      return next;
-    });
+    const field = textareaRef.current;
+    const current = field?.value ?? '';
+    const lines = current.split(/\r?\n/);
+
+    if (lines.some((line) => normalizeLine(line) === entry.raw)) {
+      // 값이 그대로면 리렌더가 없다. 그러니 선택도 지금 여기서 끝낸다.
+      selectLine(field, entry.raw);
+      return;
+    }
+
+    // 붙이는 경우에는 DOM 이 아직 새 값을 모른다. 렌더 뒤에 고르도록 남겨 둔다.
+    pendingSelection.current = entry.raw;
+    setText([...lines, entry.raw].join('\n').replace(/^\n+/, ''));
   }, []);
 
+  // 줄을 붙인 뒤의 선택. 렌더가 끝나 DOM 이 새 값을 들고 있을 때 실행된다.
   useEffect(() => {
     const target = pendingSelection.current;
-    const field = textareaRef.current;
-    if (target === null || field === null) return;
+    if (target === null) return;
     pendingSelection.current = null;
-
-    const lines = field.value.split('\n');
-    const index = lines.findIndex((line) => normalizeLine(line) === target);
-    field.focus();
-    if (index === -1) return;
-
-    // 줄 시작 오프셋 = 앞 줄들의 길이 합 + 줄바꿈 수
-    const start = lines.slice(0, index).reduce((sum, line) => sum + line.length + 1, 0);
-    field.setSelectionRange(start, start + (lines[index]?.length ?? 0));
-  });
+    selectLine(textareaRef.current, target);
+  }, [text]);
 
   const skip = useCallback(
     (entry: Entry) => {

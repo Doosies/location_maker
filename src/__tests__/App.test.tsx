@@ -88,6 +88,39 @@ describe('앱 조립', () => {
     expect(field).toHaveFocus();
   });
 
+  it('UC-LM-APP-006: 고쳐서 다시는 이미 있는 줄을 골라 보여 준다', async () => {
+    render(<App port={port()} store={createStore()} />);
+
+    const field = screen.getByLabelText('주소 입력') as HTMLTextAreaElement;
+    await userEvent.type(field, TWO_LINES);
+    await userEvent.click(screen.getByRole('button', { name: '지도에 표시' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '고쳐서 다시' })).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: '고쳐서 다시' }));
+
+    // 줄이 서른 개일 때 포커스만 끝으로 가면 어느 줄을 고칠지 알 수 없다.
+    expect(field.value).toBe(TWO_LINES);
+    expect(field.value.slice(field.selectionStart, field.selectionEnd)).toBe('있을 리 없는 주소');
+  });
+
+  it('UC-LM-APP-007: 번호가 붙은 줄도 같은 줄로 알아본다', async () => {
+    render(<App port={port()} store={createStore()} />);
+
+    const field = screen.getByLabelText('주소 입력') as HTMLTextAreaElement;
+    await userEvent.type(field, '1. 서울 강남구 테헤란로 152\n2. 있을 리 없는 주소');
+    await userEvent.click(screen.getByRole('button', { name: '지도에 표시' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '고쳐서 다시' })).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: '고쳐서 다시' }));
+
+    // `raw` 는 번호가 떼인 값이다. `trim()` 으로 비교하면 같은 주소가 한 줄 더 붙는다.
+    expect(field.value.split('\n')).toHaveLength(2);
+  });
+
   it('UC-LM-APP-005: 중단을 누르면 조회가 멈추고 남은 줄이 대기로 남는다', async () => {
     // 첫 줄에서 멈춰 서서 중단 버튼을 누를 틈을 만든다.
     let release: (() => void) | undefined;
