@@ -283,3 +283,31 @@ body {
   gap: 0.4rem;
   margin-top: 0.4rem;
 }
+
+/* ── 지도 ─────────────────────────────────────────────────────────────────── */
+.map-view {
+  width: 100%;
+  /* 화면 높이에 따라간다. 모바일에서 지도가 한 줄짜리 띠가 되면 쓸모가 없다. */
+  height: min(32rem, 60vh);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+@media (min-width: 52rem) {
+  .map-view {
+    height: min(40rem, 75vh);
+  }
+}
+
+.marker {
+  display: grid;
+  place-items: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: #1d4ed8;
+  color: #fff;
+  font: 600 0.875rem/1 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}

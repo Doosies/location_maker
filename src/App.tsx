@@ -5,8 +5,10 @@ import { normalizeLine, parseAddresses } from './domain/parse-addresses';
 import type { Entry, GeocodePort } from './domain/types';
 import { countByStatus, store as defaultStore, useStore, type Store } from './state/store';
 import { createFakeGeocoder } from './geocoding/fake-adapter';
+import { createKakaoGeocoderFromGlobal } from './geocoding/kakao-adapter';
+import { loadKakaoSdk } from './map/load-kakao-sdk';
+import { MapView } from './map/MapView';
 import { AddressInput } from './ui/AddressInput';
-import { MapPlaceholder } from './ui/MapPlaceholder';
 import { ProgressBar } from './ui/ProgressBar';
 import { ResultList } from './ui/ResultList';
 
@@ -41,7 +43,25 @@ export function App({ port, store = defaultStore }: AppProps) {
   const pendingSelection = useRef<string | null>(null);
   // 가짜 어댑터를 매 렌더마다 새로 만들면 조회 중에 표가 갈아 끼워진다.
   const fallbackPort = useRef<GeocodePort | undefined>(undefined);
-  const activePort = port ?? (fallbackPort.current ??= createFakeGeocoder({ delayMs: 120 }));
+  const [kakaoPort, setKakaoPort] = useState<GeocodePort | null>(null);
+  // 주입이 최우선(테스트), 그다음이 실제 SDK, 마지막이 가짜다. 키가 없어도 앱은 돈다.
+  const activePort =
+    port ?? kakaoPort ?? (fallbackPort.current ??= createFakeGeocoder({ delayMs: 120 }));
+
+  // SDK 로더는 같은 약속을 나눠 주므로, 지도 쪽과 따로 불러도 스크립트는 하나다.
+  useEffect(() => {
+    if (port !== undefined) return;
+
+    let cancelled = false;
+    void loadKakaoSdk({ key: import.meta.env.VITE_KAKAO_JS_KEY ?? '' }).then((result) => {
+      if (cancelled || !result.ok) return;
+      setKakaoPort(createKakaoGeocoderFromGlobal());
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [port]);
 
   const { entries, running } = useStore(store);
   const { found, failed, done, total } = countByStatus(entries);
@@ -144,10 +164,10 @@ export function App({ port, store = defaultStore }: AppProps) {
           <ResultList entries={entries} onRetry={retry} onSkip={skip} running={running} />
         </div>
         <div className="app__map">
-          <MapPlaceholder />
+          <MapView entries={entries} />
           {!running && entries.length > 0 && (
             <p className="app__map-note" aria-live="polite">
-              지도가 붙으면 찾은 {found}곳에 번호 마커가 찍힌다. 실패 {failed}곳은 목록에만 남는다.
+              찾은 {found}곳에 번호 마커가 찍혔다. 실패 {failed}곳은 목록에만 남는다.
             </p>
           )}
         </div>

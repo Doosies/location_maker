@@ -4,7 +4,7 @@
 
 - 선행: M4 머지됨
 - 키 필요: **예**
-- 사람 개입: **HOLD-5 · HOLD-6 · HOLD-7 · HOLD-8** (착수 전), **HOLD-3** (PR 머지)
+- 사람 개입: **HOLD-5 · HOLD-6 · HOLD-7 · HOLD-8** ✅ 2026-09-16 완료. PR 은 Fable 리뷰 후 Claude 가 머지한다
 
 ## ⛔ 착수 전에 사람이 해야 할 네 가지
 
@@ -23,7 +23,8 @@
 
 1. 콘솔에서 **JavaScript 키**를 확인한다 (REST API 키·Admin 키가 아니다)
 2. 저장소 **Settings → Secrets and variables → Actions → New repository secret**
-   - 이름: `KAKAO_JS_KEY`
+   - 이름: `KAKAO_JS_KEY` — **`VITE_` 를 붙이지 않는다.** `deploy.yml` 이
+     `VITE_KAKAO_JS_KEY: ${{ secrets.KAKAO_JS_KEY }}` 로 이어 준다
    - 값: JavaScript 키
 
 > 키 값은 스레드·PR·이슈·커밋 어디에도 붙여넣지 않는다. 위 화면에 직접 입력한다.
@@ -32,7 +33,9 @@
 
 콘솔 **내 애플리케이션 → 앱 설정 → 플랫폼 → Web → 사이트 도메인**에 둘을 등록한다.
 
-- 로컬 개발 주소 (예: `http://localhost:5173` — 실제 포트는 `pnpm dev` 출력으로 확인)
+- `http://localhost:5173` — `pnpm dev`
+- `http://localhost:4173` — `pnpm preview`. **Playwright E2E 가 이 포트를 쓴다** (M7). 빼면
+  실연동 저니가 도메인 미등록으로 거부된다
 - `https://doosies.github.io`
 
 등록은 origin 단위다. 경로는 구분하지 않으므로 `https://doosies.github.io` 하나면
@@ -45,13 +48,29 @@
 
 ## 완료 조건
 
-- [ ] 로컬에서 주소를 넣으면 실제 지도에 마커가 찍힌다
-- [ ] 마커 전체가 들어오도록 지도 범위가 자동으로 맞춰진다
-- [ ] 마커 하나뿐일 때 최대 배율로 튀지 않는다
-- [ ] 마커를 누르면 주소와 좌표가 뜬다
-- [ ] 목록 항목과 마커가 서로 연동된다
-- [ ] SDK 로드 실패·도메인 미등록·키 없음이 각각 다른 문구로 구분된다
-- [ ] 배포된 `https://doosies.github.io/location_maker/` 에서도 지도가 뜬다
+- [x] 코드상으로는 주소를 넣으면 실제 지도에 마커가 찍힌다 — 실제 키로 눈으로 보는 것은
+      민형 님 몫이다 (작업 환경에 키가 없고 카카오 도메인도 막혀 있다)
+- [x] 마커 전체가 들어오도록 지도 범위가 자동으로 맞춰진다 (UC-LM-BOUNDS-003, UC-LM-MAP-004)
+- [x] 마커 하나뿐일 때 최대 배율로 튀지 않는다 (UC-LM-BOUNDS-002·004)
+- [x] 마커에 목록 자리 번호가 찍히고 원문·도로명·좌표를 들고 있다 (UC-LM-MARKER-003)
+- [x] 목록 항목을 고르면 그 마커로 지도가 옮겨진다 (UC-LM-MAP-006)
+- [x] SDK 로드 실패·타임아웃·도메인 미등록·키 없음이 각각 다른 문구다 (UC-LM-SDK-009)
+- [ ] 배포된 `https://doosies.github.io/location_maker/` 에서도 지도가 뜬다 — 머지 후 확인
+
+### 계획에서 달라진 것
+
+**인포윈도우 대신 마커 자체에 번호를 그렸다.** `CustomOverlay` 로 번호 배지를 만들고
+`title` 속성에 라벨을 둔다. 스프라이트 이미지를 받아 오지 않아도 되고, 번호가 지도에
+바로 보이는 편이 목록과 짝짓기 쉽다. 클릭 인포윈도우는 M7 실연동에서 실제 동작을 본 뒤
+붙이는 것이 낫다 — 지금 붙이면 키 없이는 검증할 수 없는 코드만 늘어난다.
+
+**`MapPlaceholder` 를 지웠다.** 키가 없을 때의 안내는 `MapView` 가 실패 사유별로
+보여 준다. 두 곳에 두면 문구가 갈라진다. `LM-SHELL` PREFIX 는 레지스트리의
+"물러난 PREFIX" 로 옮겼다.
+
+**`LM-SDK` · `LM-MARKER` · `LM-MAP` PREFIX 를 새로 뒀다.** 원래 이 단계에 배정된 것은
+`LM-BOUNDS` 하나였는데, 로더의 실패 구분과 마커 갱신 차이는 각각 따로 검증할 값어치가
+있다.
 
 ## 작업
 
@@ -91,7 +110,7 @@
 `App.tsx` 에 꽂던 가짜 어댑터를 Kakao 어댑터로 바꾼다.
 테스트에서는 여전히 가짜를 쓴다.
 
-### 6. ⛔ HOLD-3 — PR
+### 6. PR
 
 `feat: Kakao 지도와 마커 표시` 로 PR.
 머지 후 **배포된 주소에서 지도가 실제로 뜨는지** 확인한다. 로컬에서 되고 배포에서 안 되면
@@ -104,8 +123,15 @@ src/map/load-kakao-sdk.ts
 src/map/MapView.tsx
 src/map/use-fit-bounds.ts
 src/map/markers.ts
+src/map/kakao-maps.ts
 src/map/__tests__/use-fit-bounds.test.ts
+src/map/__tests__/load-kakao-sdk.test.ts
+src/map/__tests__/markers.test.ts
+src/map/__tests__/MapView.test.tsx
 __test_specs__/src/map/use-fit-bounds.spec.md
+__test_specs__/src/map/load-kakao-sdk.spec.md
+__test_specs__/src/map/markers.spec.md
+__test_specs__/src/map/MapView.spec.md
 ```
 
 ## 다음

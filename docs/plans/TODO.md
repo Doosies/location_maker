@@ -38,14 +38,14 @@
 | 23 | ~~진행 표시 · 중단 버튼~~ → 완료 (`ProgressBar.tsx`) | 에이전트 | M4 | 19 (병렬) | 20 | — |
 | 24 | ~~`App.tsx` 조립 (가짜 어댑터 주입) · 반응형 · 접근성~~ → 완료 | 에이전트 | M4 | 20 (직렬) | 21,22,23 | design-system |
 | 25 | \1 PR 리뷰·머지 — Fable 에이전트 리뷰 → 승인 시 Claude 머지 | 에이전트 | M4 | 21 (직렬) | 24 | git-commit-workflow |
-| 26 | **HOLD-5** Kakao 앱 생성 + 무료 쿼터가 다른 앱에 붙어있는지 확인 | **사람** | M5 | 22 (직렬) | 25 | — |
-| 27 | **HOLD-6** JavaScript 앱키 발급 → Secrets `KAKAO_JS_KEY` 등록 | **사람** | M5 | 23 (직렬) | 26 | — |
-| 28 | **HOLD-7** 콘솔에 도메인 2개 등록 (로컬, `https://doosies.github.io`) | **사람** | M5 | 24 (직렬) | 26 | — |
-| 29 | **HOLD-8** 로컬 `.env.local` 작성 | **사람** | M5 | 25 (직렬) | 27 | — |
-| 30 | `load-kakao-sdk.ts` (autoload=false · libraries=services · 실패 원인 구분) | 에이전트 | M5 | 26 (직렬) | 29 | external-library-usage |
-| 31 | `MapView.tsx` + 마커 관리 | 에이전트 | M5 | 27 (직렬) | 30 | — |
-| 32 | `use-fit-bounds.ts` (마커 1개 예외 포함) | 에이전트 | M5 | 28 (직렬) | 31 | tdd-gate-workflow |
-| 33 | 어댑터를 Kakao 로 교체 | 에이전트 | M5 | 29 (직렬) | 32 | — |
+| 26 | ~~**HOLD-5** Kakao 앱 생성 + 쿼터 확인~~ → 완료 (2026-09-16) | **사람** | M5 | 22 (직렬) | 25 | — |
+| 27 | ~~**HOLD-6** JavaScript 앱키 → Secret `KAKAO_JS_KEY`~~ → 완료 (2026-09-16) | **사람** | M5 | 23 (직렬) | 26 | — |
+| 28 | ~~**HOLD-7** 도메인 등록~~ → 완료 (2026-09-16). 5173 · 4173 · `https://doosies.github.io` 셋 | **사람** | M5 | 24 (직렬) | 26 | — |
+| 29 | ~~**HOLD-8** 로컬 `.env.local` 작성~~ → 완료 (2026-09-16) | **사람** | M5 | 25 (직렬) | 27 | — |
+| 30 | ~~`load-kakao-sdk.ts` (autoload=false · libraries=services · 실패 원인 구분)~~ → 완료 | 에이전트 | M5 | 26 (직렬) | 29 | external-library-usage |
+| 31 | ~~`MapView.tsx` + 마커 관리~~ → 완료 (`markers.ts` 로 차이 계산 분리) | 에이전트 | M5 | 27 (직렬) | 30 | — |
+| 32 | ~~`use-fit-bounds.ts` (마커 1개 예외 포함)~~ → 완료. 좌표가 전부 같은 경우도 같이 막았다 | 에이전트 | M5 | 28 (직렬) | 31 | tdd-gate-workflow |
+| 33 | ~~어댑터를 Kakao 로 교체~~ → 완료. 키가 있으면 Kakao, 없으면 가짜로 떨어진다 | 에이전트 | M5 | 29 (직렬) | 32 | — |
 | 34 | M5 PR 리뷰·머지 — Fable 리뷰 → 승인 시 Claude 머지. **배포 주소에서 지도 확인은 사람** | 에이전트 + 사람 | M5 | 30 (직렬) | 33 | git-commit-workflow |
 | 35 | `url-state.ts` — 해시 인코딩·복원·자동 재조회 | 에이전트 | M6 | 31 (병렬) | 25 | tdd-gate-workflow |
 | 36 | `to-csv.ts` — 이스케이프 · BOM · 실패 항목 포함 | 에이전트 | M6 | 31 (병렬) | 25 | tdd-gate-workflow |
@@ -68,10 +68,10 @@
 | 3 | spec-sync 반입 방식 승인 | 스레드에서 한마디 | M1 중 |
 | ~~7~~ | ~~Pages Source 를 GitHub Actions 로~~ → 완료 (2026-09-16) | 저장소 Settings → Pages | M1 중 |
 | ~~14~~ | ~~Kakao SDK 시그니처 대조~~ → 완료 (2026-09-16) | Kakao 공식 문서 | M3 착수 전 |
-| 26 | 앱 생성 + 쿼터 확인 | Kakao Developers 콘솔 | M5 착수 전 |
-| 27 | JS 앱키 → Secrets `KAKAO_JS_KEY` | 저장소 Settings → Secrets | M5 착수 전 |
-| 28 | 도메인 2개 등록 | Kakao 콘솔 → 플랫폼 → Web | M5 착수 전 |
-| 29 | `.env.local` 작성 | 로컬 파일 | M5 착수 전 |
+| ~~26~~ | ~~앱 생성 + 쿼터 확인~~ → 완료 (2026-09-16) | Kakao Developers 콘솔 | M5 착수 전 |
+| ~~27~~ | ~~JS 앱키 → Secret `KAKAO_JS_KEY`~~ → 완료 (2026-09-16) | 저장소 Settings → Secrets | M5 착수 전 |
+| ~~28~~ | ~~도메인 3개 등록 (5173 · 4173 · doosies.github.io)~~ → 완료 (2026-09-16) | Kakao 콘솔 → 플랫폼 → Web | M5 착수 전 |
+| ~~29~~ | ~~`.env.local` 작성~~ → 완료 (2026-09-16) | 로컬 파일 | M5 착수 전 |
 | 43 | 실연동 검증 | 브라우저 · 로컬 터미널 | M7 후 |
 | ~~8·13·19·25·34·38·44~~ | ~~단계별 PR 리뷰·머지~~ → 2026-09-16 지시로 사람 개입 없음 (Fable 리뷰 → Claude 머지) | GitHub | 각 단계 끝 |
 
