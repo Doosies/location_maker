@@ -28,6 +28,8 @@
 | `LM-SDK` | `src/map/__tests__/load-kakao-sdk.test.ts` | SDK 로더 — 실패 원인 구분 |
 | `LM-MARKER` | `src/map/__tests__/markers.test.ts` | 마커 번호와 갱신 차이 계산 |
 | `LM-MAP` | `src/map/__tests__/MapView.test.tsx` | 지도 화면 — 마커 동기화·범위 |
+| `LM-URL` | `src/share/__tests__/url-state.test.ts` | 링크에 담는 주소 목록 |
+| `LM-CSV` | `src/share/__tests__/to-csv.test.ts` | CSV 내보내기 — 이스케이프·BOM |
 
 ## 물러난 PREFIX
 
@@ -43,6 +45,4 @@
 
 | PREFIX | 대상 | 단계 |
 | --- | --- | --- |
-| `LM-URL` | 링크 공유용 해시 인코딩 | M6 |
-| `LM-CSV` | CSV 내보내기 | M6 |
 | `LME-PLOT` | E2E 저니 — 붙여넣기부터 CSV 까지 | M7 |

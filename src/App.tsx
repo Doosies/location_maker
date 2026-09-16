@@ -8,6 +8,9 @@ import { createFakeGeocoder } from './geocoding/fake-adapter';
 import { createKakaoGeocoderFromGlobal } from './geocoding/kakao-adapter';
 import { loadKakaoSdk, type LoadFailure } from './map/load-kakao-sdk';
 import { MapView } from './map/MapView';
+import { downloadText } from './share/download';
+import { csvFileName, toCsv } from './share/to-csv';
+import { decodeAddresses, encodeAddresses } from './share/url-state';
 import { AddressInput } from './ui/AddressInput';
 import { ProgressBar } from './ui/ProgressBar';
 import { ResultList } from './ui/ResultList';
@@ -19,6 +22,12 @@ export type AppProps = {
    */
   port?: GeocodePort;
   store?: Store;
+  /** 주소창의 해시. 링크로 받은 주소 목록이 여기 들어 있다. */
+  hash?: string;
+  /** 링크 복사에 쓸 클립보드. 테스트와 클립보드가 막힌 브라우저를 위해 주입받는다. */
+  clipboard?: { writeText: (text: string) => Promise<void> };
+  /** 파일 내려받기. jsdom 에는 `createObjectURL` 이 없어 테스트가 갈아 끼운다. */
+  download?: (content: string, fileName: string) => void;
 };
 
 /** 입력창에서 `raw` 와 같은 줄을 찾아 선택한다. 없으면 포커스만 옮긴다. */
@@ -35,7 +44,13 @@ function selectLine(field: HTMLTextAreaElement | null, raw: string): void {
   field.setSelectionRange(start, start + (lines[index]?.length ?? 0));
 }
 
-export function App({ port, store = defaultStore }: AppProps) {
+export function App({
+  port,
+  store = defaultStore,
+  hash = globalThis.location?.hash ?? '',
+  clipboard,
+  download = downloadText,
+}: AppProps) {
   const [text, setText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -81,27 +96,63 @@ export function App({ port, store = defaultStore }: AppProps) {
   const { entries, running } = useStore(store);
   const { found, failed, done, total } = countByStatus(entries);
 
-  const submit = useCallback(async () => {
-    const parsed = parseAddresses(text);
-    if (parsed.length === 0) return;
+  const run = useCallback(
+    async (source: string) => {
+      const parsed = parseAddresses(source);
+      if (parsed.length === 0) return;
 
-    const controller = new AbortController();
-    abortRef.current = controller;
-    store.setEntries(parsed);
-    store.setRunning(true);
+      const controller = new AbortController();
+      abortRef.current = controller;
+      store.setEntries(parsed);
+      store.setRunning(true);
 
-    try {
-      await runGeocodeQueue({
-        entries: parsed,
-        port: activePort,
-        signal: controller.signal,
-        onResult: (entry) => store.updateEntry(entry.id, entry),
-      });
-    } finally {
-      store.setRunning(false);
-      abortRef.current = null;
+      try {
+        await runGeocodeQueue({
+          entries: parsed,
+          port: activePort,
+          signal: controller.signal,
+          onResult: (entry) => store.updateEntry(entry.id, entry),
+        });
+      } finally {
+        store.setRunning(false);
+        abortRef.current = null;
+      }
+    },
+    [activePort, store],
+  );
+
+  const submit = useCallback(() => {
+    void run(text);
+  }, [run, text]);
+
+  /**
+   * 링크로 받은 주소를 복원하고 **바로 조회를 시작한다.**
+   *
+   * 링크를 받은 쪽에 버튼을 한 번 더 누르게 하면, 받은 사람은 보낸 사람이 본 것과 같은
+   * 지도를 보기까지 한 단계를 더 거친다. 좌표를 링크에 담지 않기로 한 대가를 사용자가
+   * 치를 이유가 없다.
+   *
+   * 키가 있는데 SDK 가 아직 없으면 기다렸다가 준비된 뒤에 돈다 — 가짜 어댑터로 답하면
+   * 실제 주소가 전부 "못 찾음" 으로 찍힌다.
+   */
+  const restored = useRef(false);
+  const autoRun = useRef<string | null>(null);
+  useEffect(() => {
+    if (!restored.current) {
+      restored.current = true;
+      const addresses = decodeAddresses(hash);
+      if (addresses.length > 0) {
+        const joined = addresses.join('\n');
+        setText(joined);
+        autoRun.current = joined;
+      }
     }
-  }, [activePort, store, text]);
+
+    const source = autoRun.current;
+    if (source === null || waitingForSdk) return;
+    autoRun.current = null;
+    void run(source);
+  }, [hash, run, waitingForSdk]);
 
   const abort = useCallback(() => {
     abortRef.current?.abort();
@@ -146,6 +197,41 @@ export function App({ port, store = defaultStore }: AppProps) {
     setFocusedId(entry.id);
   }, []);
 
+  /**
+   * 링크 복사와 CSV 내려받기.
+   *
+   * 링크에는 **입력창의 주소**를 담는다. 목록이 아니라 입력창인 이유는, 조회 전에도
+   * 링크를 보낼 수 있어야 하고 실패한 줄도 그대로 건너가야 하기 때문이다.
+   * CSV 는 반대로 **조회 결과**라 목록에서 만든다.
+   */
+  const [shareNote, setShareNote] = useState<string | null>(null);
+
+  const copyLink = useCallback(() => {
+    const encoded = encodeAddresses(parseAddresses(text).map((entry) => entry.raw));
+    if (!encoded.ok) {
+      // 이 순간 목록이 비어 있으면 CSV 버튼은 아직 잠겨 있다. 순서를 같이 알려 준다.
+      setShareNote('주소가 너무 많아 링크에 담을 수 없다. 지도에 표시한 뒤 CSV 로 내려받는 편이 낫다.');
+      return;
+    }
+
+    const base = (globalThis.location?.href ?? '').split('#')[0] ?? '';
+    const writeText = clipboard?.writeText ?? globalThis.navigator?.clipboard?.writeText.bind(globalThis.navigator.clipboard);
+    if (writeText === undefined) {
+      // 클립보드가 막힌 브라우저에서도 링크 자체는 손에 쥐여 준다.
+      setShareNote(`${base}${encoded.hash}`);
+      return;
+    }
+
+    void writeText(`${base}${encoded.hash}`).then(
+      () => setShareNote('링크를 복사했다.'),
+      () => setShareNote(`${base}${encoded.hash}`),
+    );
+  }, [clipboard, text]);
+
+  const saveCsv = useCallback(() => {
+    download(toCsv(entries), csvFileName(new Date()));
+  }, [download, entries]);
+
   const skip = useCallback(
     (entry: Entry) => {
       store.updateEntry(entry.id, { status: 'skipped' });
@@ -156,17 +242,29 @@ export function App({ port, store = defaultStore }: AppProps) {
   return (
     <div className="app">
       <header className="app__header">
-        <h1>location maker</h1>
-        <p>주소를 여러 줄 붙여넣으면 지도에 표시한다.</p>
+        <div>
+          <h1>location maker</h1>
+          <p>주소를 여러 줄 붙여넣으면 지도에 표시한다.</p>
+        </div>
+        <div className="app__actions">
+          <button type="button" className="button button--small" onClick={saveCsv} disabled={entries.length === 0 || running}>
+            CSV 내려받기
+          </button>
+          <button type="button" className="button button--small" onClick={copyLink} disabled={text.trim() === ''}>
+            링크 복사
+          </button>
+        </div>
       </header>
       <main className="app__body">
         <div className="app__panel">
           <AddressInput
             value={text}
-            onChange={setText}
-            onSubmit={() => {
-              void submit();
+            onChange={(value) => {
+              // 오래된 안내가 새 입력에 붙어 있으면 방금 복사한 링크인 줄 안다.
+              setShareNote(null);
+              setText(value);
             }}
+            onSubmit={submit}
             disabled={running || waitingForSdk}
             textareaRef={textareaRef}
           />
@@ -175,6 +273,11 @@ export function App({ port, store = defaultStore }: AppProps) {
               {sdkFailure === null
                 ? '지도를 불러오는 중이다. 준비되면 조회할 수 있다.'
                 : '지도를 불러오지 못해 조회를 멈춰 뒀다. 오른쪽 안내를 확인한다.'}
+            </p>
+          )}
+          {shareNote !== null && (
+            <p className="app__notice" aria-live="polite">
+              {shareNote}
             </p>
           )}
           {running && <ProgressBar done={done} total={total} onAbort={abort} />}
