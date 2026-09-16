@@ -94,6 +94,11 @@ places.keywordSearch(keyword, callback, options?)
 | `ZERO_RESULT` | 정상 응답, 결과 없음 | `notFound` (`reason: 'zero_result'`) |
 | `ERROR` | 서버 응답에 문제 | `failed` (`reason: 'sdk'`) |
 
+**`network` 도 쓰이지 않는다.** SDK 는 네트워크 실패를 따로 알려 주지 않고 `ERROR` 에
+섞어 보낸다. 그래서 Kakao 어댑터가 내는 실패 사유는 `zero_result` 와 `sdk` 둘뿐이다.
+설계 §6 이 네트워크 실패와 SDK 실패의 복구 안내를 다르게 두고 있으므로, M4 에서 문구를
+정할 때 이 점을 본다.
+
 `status` 는 문자열이다 (`'OK'` 등). `kakao.maps.services.Status.OK` 와 비교하면 된다.
 
 **쿼터 초과가 별도 코드로 오지 않는다.** 설계에서 `reason: 'quota'` 를 두고 큐 전체를

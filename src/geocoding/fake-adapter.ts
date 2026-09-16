@@ -1,4 +1,5 @@
 import type { GeocodePort, GeocodeResult } from './port';
+import { aborted, abortedResult, emptyQueryResult } from './results';
 
 /**
  * 네트워크도 SDK 도 없는 지오코더.
@@ -65,14 +66,6 @@ function failure(reason: 'network' | 'quota' | 'sdk'): GeocodeResult {
   return { ok: false, failure: { reason, message: messages[reason] } };
 }
 
-/**
- * `signal.aborted` 를 프로퍼티로 두 번 읽으면 첫 검사가 타입을 좁혀 두 번째가
- * "일어날 수 없는 비교" 로 잡힌다. abort 는 도중에 바뀌는 값이라 매번 새로 읽는다.
- */
-function aborted(signal?: AbortSignal): boolean {
-  return signal?.aborted === true;
-}
-
 export function createFakeGeocoder(options: FakeGeocoderOptions = {}): GeocodePort {
   const places = options.places ?? DEFAULT_FAKE_PLACES;
   const delayMs = options.delayMs ?? 0;
@@ -128,30 +121,16 @@ export function createFakeGeocoder(options: FakeGeocoderOptions = {}): GeocodePo
   };
 }
 
-/**
- * 중단과 빈 질의는 두 어댑터가 똑같이 답해야 하는 자리라 여기 모아 둔다.
- * 계약 테스트가 두 구현에 같은 기대를 걸기 때문이다.
- */
-export function abortedResult(): GeocodeResult {
-  // `reason` 에 'aborted' 는 없다. 큐가 중단 중의 실패를 `pending` 으로 되돌리므로
-  // 사용자에게 이 메시지가 보일 일은 없지만, 남는다면 재시도하라는 뜻이 맞다.
-  return { ok: false, failure: { reason: 'network', message: '조회를 멈췄다' } };
-}
-
-export function emptyQueryResult(): GeocodeResult {
-  return { ok: false, failure: { reason: 'zero_result', message: '주소가 비어 있다' } };
-}
-
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve) => {
-    const timer = setTimeout(resolve, ms);
-    signal?.addEventListener(
-      'abort',
-      () => {
-        clearTimeout(timer);
-        resolve();
-      },
-      { once: true },
-    );
+    // 큐는 항목 전부에 같은 signal 을 넘긴다. 정상 만료 때 리스너를 떼지 않으면
+    // (`once` 는 발화했을 때만 떼 준다) 항목 수만큼 리스너가 쌓인다.
+    const done = (): void => {
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', done);
+      resolve();
+    };
+    const timer = setTimeout(done, ms);
+    signal?.addEventListener('abort', done, { once: true });
   });
 }

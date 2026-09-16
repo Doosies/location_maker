@@ -1,5 +1,5 @@
-import { abortedResult, emptyQueryResult } from './fake-adapter';
 import type { GeocodePort, GeocodeResult, Place } from './port';
+import { aborted, abortedResult, emptyQueryResult } from './results';
 
 /**
  * Kakao 지도 SDK 를 `GeocodePort` 뒤로 감춘다.
@@ -35,6 +35,9 @@ export type KakaoPlaceItem = {
 export type KakaoStatus = { OK: string; ZERO_RESULT: string; ERROR: string };
 
 type Callback<T> = (result: T[], status: string) => void;
+
+/** 콜백이 먼저 왔는지, abort 가 먼저 왔는지. 둘을 섞으면 성공을 버리게 된다. */
+type CallOutcome<T> = { aborted: true } | { aborted: false; result: T[]; status: string };
 
 export type KakaoGeocoder = {
   addressSearch(query: string, callback: Callback<KakaoAddressItem>): void;
@@ -111,28 +114,49 @@ function zeroResult(): GeocodeResult {
 
 // ── 어댑터 ──────────────────────────────────────────────────────────────────
 
-/** `signal.aborted` 를 매번 새로 읽는다. 프로퍼티로 두 번 읽으면 TS 가 좁혀 버린다. */
-function aborted(signal?: AbortSignal): boolean {
-  return signal?.aborted === true;
-}
-
 export function createKakaoGeocoder(services: KakaoServices): GeocodePort {
   const geocoder = new services.Geocoder();
   const places = new services.Places();
   const { Status } = services;
 
-  /** 콜백 한 번을 Promise 한 번으로 바꾼다. 두 번 부르는 SDK 가 있어도 첫 번째만 쓴다. */
-  function call<T>(invoke: (callback: Callback<T>) => void): Promise<{ result: T[]; status: string }> {
+  /**
+   * 콜백 한 번을 Promise 한 번으로 바꾼다. 두 번 부르는 SDK 가 있어도 첫 번째만 쓴다.
+   *
+   * **진행 중에도 `signal` 을 본다.** 콜백이 영영 오지 않는 경우(스크립트가 죽거나
+   * 응답이 유실되는 경우)가 실제로 있고, abort 를 여기서 받지 않으면 `geocode` 가
+   * settle 되지 않는다. 그러면 큐의 `Promise.all` 이 끝나지 않아 화면의 그 줄이
+   * `loading` 에 고정되고 "멈춤" 버튼도 듣지 않는다.
+   *
+   * 콜백이 abort 보다 먼저 왔다면 **그 결과를 쓴다** — 이미 쿼터를 쓴 응답을 버릴
+   * 이유가 없다. 큐도 같은 이유로 "성공은 살린다" 로 돼 있다.
+   */
+  function call<T>(invoke: (callback: Callback<T>) => void, signal?: AbortSignal): Promise<CallOutcome<T>> {
     return new Promise((resolve, reject) => {
       let settled = false;
+
+      const finish = (outcome: CallOutcome<T>): void => {
+        if (settled) return;
+        settled = true;
+        signal?.removeEventListener('abort', onAbort);
+        resolve(outcome);
+      };
+      function onAbort(): void {
+        finish({ aborted: true });
+      }
+
+      if (aborted(signal)) {
+        resolve({ aborted: true });
+        return;
+      }
+      signal?.addEventListener('abort', onAbort, { once: true });
+
       try {
-        invoke((result, status) => {
-          if (settled) return;
-          settled = true;
-          resolve({ result: result ?? [], status });
-        });
+        invoke((result, status) => finish({ aborted: false, result: result ?? [], status }));
       } catch (error) {
         // SDK 가 콜백 대신 동기 예외를 던지는 경우 (스크립트 미로딩 등).
+        if (settled) return;
+        settled = true;
+        signal?.removeEventListener('abort', onAbort);
         reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
@@ -143,33 +167,38 @@ export function createKakaoGeocoder(services: KakaoServices): GeocodePort {
       if (aborted(signal)) return abortedResult();
       if (query.trim() === '') return emptyQueryResult();
 
-      let address: { result: KakaoAddressItem[]; status: string };
+      let address: CallOutcome<KakaoAddressItem>;
       try {
-        address = await call<KakaoAddressItem>((cb) => geocoder.addressSearch(query, cb));
+        address = await call<KakaoAddressItem>((cb) => geocoder.addressSearch(query, cb), signal);
       } catch (error) {
         return sdkFailure(error instanceof Error ? error.message : '주소 검색에 실패했다');
       }
 
-      if (aborted(signal)) return abortedResult();
+      if (address.aborted) return abortedResult();
 
       if (address.status === Status.OK) {
         const first = address.result[0];
         const place = first === undefined ? null : toPlaceFromAddress(first);
+        // 좌표가 이미 손에 있다면 그 사이 abort 가 있었더라도 돌려준다.
         if (place !== null) return { ok: true, place };
         // OK 인데 쓸 수 있는 항목이 없다. 키워드 검색으로 한 번 더 가 본다.
       } else if (address.status === Status.ERROR) {
         return sdkFailure('주소 검색 중 오류가 났다');
       }
 
+      // 두 번째 조회를 **시작하기 전에** 중단을 본다. 첫 조회가 빈손으로 끝난 뒤라
+      // 버릴 결과가 없고, 멈춘 뒤에 쿼터를 한 건 더 쓸 이유도 없다.
+      if (aborted(signal)) return abortedResult();
+
       // 지번·도로명으로 못 찾았다. 상호명일 수 있으니 키워드로 한 번 더 찾는다.
-      let keyword: { result: KakaoPlaceItem[]; status: string };
+      let keyword: CallOutcome<KakaoPlaceItem>;
       try {
-        keyword = await call<KakaoPlaceItem>((cb) => places.keywordSearch(query, cb));
+        keyword = await call<KakaoPlaceItem>((cb) => places.keywordSearch(query, cb), signal);
       } catch (error) {
         return sdkFailure(error instanceof Error ? error.message : '키워드 검색에 실패했다');
       }
 
-      if (aborted(signal)) return abortedResult();
+      if (keyword.aborted) return abortedResult();
 
       if (keyword.status === Status.ERROR) {
         return sdkFailure('키워드 검색 중 오류가 났다');

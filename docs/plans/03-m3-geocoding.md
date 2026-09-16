@@ -80,7 +80,8 @@ export interface GeocodePort {
 
 어댑터를 쓰기 전에 [Kakao SDK 실제 시그니처](../findings/kakao-sdk.md) 를 먼저 읽는다.
 
-### 2. 가짜 어댑터 — `src/geocoding/fake-adapter.ts`
+### 2. 가짜 어댑터 — `src/geocoding/results.ts
+src/geocoding/fake-adapter.ts`
 
 - 고정 주소 테이블을 들고 있다 (`테헤란로 152` → 좌표 등)
 - 테이블에 없으면 `zero_result`
@@ -109,7 +110,7 @@ Kakao 구현은 SDK 를 스텁으로 주입해 돌린다. 실제 네트워크를
 - 어느 쪽으로 찾았는지 `matchedBy: 'address' | 'keyword'` 에 남긴다
 - 좌표 변환: SDK 의 `x`/`y` 를 `lng`/`lat` 로 **명시적으로** 옮긴다.
   이 한 줄에 주석을 단다 — 가장 헷갈리는 지점이다
-- 실패 분류: `ZERO_RESULT` → `zero_result`, HTTP 429 → `quota`, 그 외 → `network` / `sdk`
+- 실패 분류: `ZERO_RESULT` → `zero_result`, `ERROR`·동기 예외 → `sdk`. **`quota` 도 `network` 도 내지 않는다** (아래 결정 참조)
 - SDK 는 생성자 인자로 주입받는다. 전역을 직접 읽지 않는다 (테스트 때문에)
 
 ### 5. 타입 정의 방식 결정
@@ -129,6 +130,7 @@ HOLD-4 에서 확인한 실제 시그니처로 직접 선언하는 쪽을 권한
 
 ```
 src/geocoding/port.ts
+src/geocoding/results.ts
 src/geocoding/fake-adapter.ts
 src/geocoding/kakao-adapter.ts
 src/geocoding/__tests__/port-contract.test.ts
