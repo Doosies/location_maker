@@ -13,6 +13,7 @@
 | `LM-SPEC-SYNC` | 스펙 ↔ 테스트 짝 검사 자체 | M1 |
 | `LM-PARSE` | 붙여넣은 텍스트를 주소 줄로 나누기 | M2 |
 | `LM-QUEUE` | 지오코딩 큐 — 동시 실행, 중단, 쿼터 처리 | M2 |
+| `LM-BOUNDARY` | `src/domain/` 이 바깥을 끌어오지 않는지 | M2 |
 | `LM-PORT` | `GeocodePort` 계약 | M3 |
 | `LM-KAKAO` | Kakao 어댑터 | M3 |
 | `LM-STORE` | 상태 저장소와 순서 불변식 | M4 |
