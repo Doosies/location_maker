@@ -18,6 +18,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      CAS_READ_TOKEN: ${{ secrets.CAS_READ_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -27,12 +29,12 @@ jobs:
           cache: pnpm
       # @cas/spec-sync 는 비공개 저장소(common_agent_system)에 있다.
       # 토큰을 URL 에 박으면 로그·락파일로 새기 쉬우므로 credential helper 로만 넘긴다.
+      # helper 는 pnpm install 이 git 을 부르는 순간 실행되므로, 토큰은 그 스텝에도
+      # 환경변수로 살아 있어야 한다. 그래서 잡 단위로 둔다.
       - name: 비공개 저장소 접근 설정
-        env:
-          CAS_READ_TOKEN: ${{ secrets.CAS_READ_TOKEN }}
         run: |
           git config --global credential."https://github.com".helper \
-            '!f() { echo username=x-access-token; echo password=$CAS_READ_TOKEN; }; f'
+            '!f() { echo username=x-access-token; echo "password=$CAS_READ_TOKEN"; }; f'
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git config --global --add url."https://github.com/".insteadOf "ssh://git@github.com/"
       - run: pnpm install --frozen-lockfile
