@@ -7,7 +7,14 @@
 - 키 필요: 아니오 (코드를 쓰는 데는 필요 없다. 실제로 불러 보는 것은 M5)
 - 사람 개입: **HOLD-4** (착수 전), **HOLD-3** (PR 머지)
 
-## ⛔ HOLD-4 — 착수 전에 SDK 문서를 대조한다
+## ~~⛔ HOLD-4~~ — 완료 (2026-09-16)
+
+민형 님이 카카오 Web API 문서를 붙여넣어 주셨고, 대조 결과는
+[`docs/findings/kakao-sdk.md`](../findings/kakao-sdk.md) 에 있다. **어댑터를 고칠 때는
+아래 목록이 아니라 그 문서를 본다.** 아래는 무엇을 확인했는지의 기록으로 남긴다.
+
+<details>
+<summary>대조 항목 (완료)</summary>
 
 설계 문서에 적힌 Kakao SDK 시그니처는 **기억에 기대 쓴 것**이다. 설계 세션이 네트워크
 정책상 Kakao 문서에 접속하지 못했다. 아래를 공식 문서와 타입 정의로 확인하기 전에는
@@ -22,15 +29,27 @@
 - `kakao.maps.services.Places().keywordSearch(query, callback, options?)` 시그니처
 - SDK 로드 URL 의 `libraries=services`, `autoload=false` + `kakao.maps.load(cb)` 패턴
 
-문서에 접속 가능한 환경에서 에이전트가 직접 확인할 수 있으면 그렇게 해도 된다.
-확인 결과는 `docs/findings/kakao-sdk.md` 에 남긴다 — 다음 사람이 또 찾지 않도록.
+</details>
 
 ## 완료 조건
 
-- [ ] `GeocodePort` 인터페이스가 정의돼 있다
-- [ ] 가짜 어댑터와 Kakao 어댑터가 **같은 계약 테스트**를 통과한다
-- [ ] Kakao 어댑터 밖의 어떤 파일도 `kakao` 전역을 쓰지 않는다
-- [ ] SDK 대조 결과가 `docs/findings/kakao-sdk.md` 에 기록돼 있다
+- [x] `GeocodePort` 인터페이스가 정의돼 있다 (`domain/types.ts`, `geocoding/port.ts` 가 re-export)
+- [x] 가짜 어댑터와 Kakao 어댑터가 **같은 계약 테스트**를 통과한다 (`describe.each`, UC-LM-PORT-001~005)
+- [x] Kakao 어댑터 밖의 어떤 파일도 `kakao` 전역을 쓰지 않는다
+- [x] SDK 대조 결과가 `docs/findings/kakao-sdk.md` 에 기록돼 있다
+
+### 쿼터를 어떻게 볼지 — M3 에서 내린 결정 (2026-09-16 민형 님 승인)
+
+설계는 `reason: 'quota'` 를 만나면 큐 전체를 멈추기로 했는데, SDK 는 쿼터 초과를 별도
+status 로 알려 주지 않는다. 서버 오류와 한도 초과가 `ERROR` 하나로 섞여 온다.
+
+**Kakao 어댑터는 `quota` 를 내지 않는다.** `ERROR` 는 전부 `sdk` 로 분류한다. 근거 없이
+`quota` 로 부르면 일시적인 서버 오류 한 번에 남은 항목이 통째로 멈춘다. 거꾸로 진짜
+한도 초과였다면 나머지도 어차피 `ERROR` 로 실패하므로, 실패 항목이 제자리에 남는다는
+점은 같다 — 차이는 "다시 시도하면 될까" 뿐인데 그건 사용자가 판단하는 편이 낫다.
+
+`Failure` 타입과 큐의 `quota` 경로는 **그대로 둔다.** 가짜 어댑터가 그 경로를 계속
+검증하고, 쿼터를 알아볼 방법이 생기면(예: REST 로 가면 HTTP 429 가 보인다) 그때 쓴다.
 
 ## 작업
 
@@ -61,7 +80,8 @@ export interface GeocodePort {
 
 어댑터를 쓰기 전에 [Kakao SDK 실제 시그니처](../findings/kakao-sdk.md) 를 먼저 읽는다.
 
-### 2. 가짜 어댑터 — `src/geocoding/fake-adapter.ts`
+### 2. 가짜 어댑터 — `src/geocoding/results.ts
+src/geocoding/fake-adapter.ts`
 
 - 고정 주소 테이블을 들고 있다 (`테헤란로 152` → 좌표 등)
 - 테이블에 없으면 `zero_result`
@@ -90,7 +110,7 @@ Kakao 구현은 SDK 를 스텁으로 주입해 돌린다. 실제 네트워크를
 - 어느 쪽으로 찾았는지 `matchedBy: 'address' | 'keyword'` 에 남긴다
 - 좌표 변환: SDK 의 `x`/`y` 를 `lng`/`lat` 로 **명시적으로** 옮긴다.
   이 한 줄에 주석을 단다 — 가장 헷갈리는 지점이다
-- 실패 분류: `ZERO_RESULT` → `zero_result`, HTTP 429 → `quota`, 그 외 → `network` / `sdk`
+- 실패 분류: `ZERO_RESULT` → `zero_result`, `ERROR`·동기 예외 → `sdk`. **`quota` 도 `network` 도 내지 않는다** (아래 결정 참조)
 - SDK 는 생성자 인자로 주입받는다. 전역을 직접 읽지 않는다 (테스트 때문에)
 
 ### 5. 타입 정의 방식 결정
@@ -110,6 +130,7 @@ HOLD-4 에서 확인한 실제 시그니처로 직접 선언하는 쪽을 권한
 
 ```
 src/geocoding/port.ts
+src/geocoding/results.ts
 src/geocoding/fake-adapter.ts
 src/geocoding/kakao-adapter.ts
 src/geocoding/__tests__/port-contract.test.ts

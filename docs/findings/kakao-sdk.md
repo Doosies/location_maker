@@ -94,12 +94,20 @@ places.keywordSearch(keyword, callback, options?)
 | `ZERO_RESULT` | 정상 응답, 결과 없음 | `notFound` (`reason: 'zero_result'`) |
 | `ERROR` | 서버 응답에 문제 | `failed` (`reason: 'sdk'`) |
 
+**`network` 도 쓰이지 않는다.** SDK 는 네트워크 실패를 따로 알려 주지 않고 `ERROR` 에
+섞어 보낸다. 그래서 Kakao 어댑터가 내는 실패 사유는 `zero_result` 와 `sdk` 둘뿐이다.
+설계 §6 이 네트워크 실패와 SDK 실패의 복구 안내를 다르게 두고 있으므로, M4 에서 문구를
+정할 때 이 점을 본다.
+
 `status` 는 문자열이다 (`'OK'` 등). `kakao.maps.services.Status.OK` 와 비교하면 된다.
 
 **쿼터 초과가 별도 코드로 오지 않는다.** 설계에서 `reason: 'quota'` 를 두고 큐 전체를
 멈추기로 했는데, 이 콜백만으로는 쿼터인지 일반 오류인지 구분되지 않는다.
-M3 에서 판단할 것: `ERROR` 가 연속으로 몇 번 나면 쿼터로 보고 멈출지, 아니면
-`quota` 를 실질적으로 쓰지 않을지. 큐 쪽 코드는 이미 두 경우를 모두 다룬다.
+
+**M3 결정: Kakao 어댑터는 `quota` 를 내지 않는다.** `ERROR` 는 전부 `sdk` 로 분류한다.
+서버 오류 한 번에 남은 항목을 통째로 멈추는 쪽이 더 나쁘기 때문이다. 큐의 `quota`
+경로는 그대로 두고 가짜 어댑터가 계속 검증한다. 근거는
+[M3 플랜](../plans/03-m3-geocoding.md#쿼터를-어떻게-볼지--m3-에서-내린-결정) 에 있다.
 
 ## 콜백을 Promise 로 감싸는 자리
 
@@ -111,4 +119,4 @@ SDK 는 콜백 API 다. 이것을 Promise 로 바꾸는 층은 `kakao-adapter.ts
 
 - [ ] 실제 응답으로 `x`/`y` 확인 (HOLD-9, M7)
 - [ ] `road_address` 가 `null` 인 주소로 한 번 돌려보기
-- [ ] 쿼터 초과 시 실제로 오는 `status` 값
+- [ ] 쿼터 초과 시 실제로 오는 `status` 값 — 확인되면 위 결정을 다시 볼 것
