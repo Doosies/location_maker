@@ -11,7 +11,8 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test --project=stub --project=no-key",
+    "test:e2e:live": "playwright test --project=live"
   },
   "dependencies": {
     "react": "^19.2.0",

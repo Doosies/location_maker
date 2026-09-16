@@ -1,0 +1,37 @@
+name: E2E (실연동)
+
+# 진짜 Kakao SDK 에 붙는다. **수동으로만 돌린다.**
+# 자동으로 돌리면 남의 서비스의 네트워크와 쿼터에 우리 초록이 묶이고, 쿼터도 조금씩 나간다.
+on:
+  workflow_dispatch:
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    env:
+      CAS_READ_TOKEN: ${{ secrets.CAS_READ_TOKEN }}
+      # 키는 Secrets 에서만 온다. 없으면 빈 문자열로 빌드되고 테스트가 실패한다 —
+      # 조용히 건너뛰면 초록이 신호가 아니게 된다.
+      VITE_KAKAO_JS_KEY: ${{ secrets.KAKAO_JS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: 비공개 저장소 접근 설정
+        run: |
+          git config --global credential."https://github.com".helper \
+            '!f() { echo username=x-access-token; echo "password=$CAS_READ_TOKEN"; }; f'
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git config --global --add url."https://github.com/".insteadOf "ssh://git@github.com/"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e:live
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-live
+          path: playwright-report/
+          retention-days: 7
