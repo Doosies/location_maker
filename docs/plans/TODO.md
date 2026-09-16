@@ -50,12 +50,12 @@
 | 35 | ~~`url-state.ts` — 해시 인코딩·복원·자동 재조회~~ → 완료. 상한을 넘으면 자르지 않고 거절한다 | 에이전트 | M6 | 31 (병렬) | 25 | tdd-gate-workflow |
 | 36 | ~~`to-csv.ts` — 이스케이프 · BOM · 실패 항목 포함~~ → 완료. `건물명` 대신 `도로명주소` 열 | 에이전트 | M6 | 31 (병렬) | 25 | tdd-gate-workflow |
 | 37 | ~~`download.ts` + 파일명에 날짜~~ → 완료. 앱이 주입받아 테스트한다 | 에이전트 | M6 | 32 (직렬) | 35,36 | — |
-| 38 | M6 PR 리뷰·머지 — Fable 에이전트 리뷰 → 승인 시 Claude 머지 | 에이전트 | M6 | 33 (직렬) | 37 | git-commit-workflow |
-| 39 | `kakao-sdk-stub.ts` — SDK 라우트 가로채기 | 에이전트 | M7 | 34 (직렬) | 34,38 | journey-testing |
-| 40 | 저니 스펙 → `paste-and-plot.spec.ts` (7개 시나리오) | 에이전트 | M7 | 35 (직렬) | 39 | journey-testing |
-| 41 | `live-kakao.spec.ts` — `@live` 태그, 키 없으면 실패 | 에이전트 | M7 | 36 (직렬) | 39 | journey-testing |
-| 42 | CI 에 저니 추가 · 실연동은 `workflow_dispatch` | 에이전트 | M7 | 37 (직렬) | 40,41 | — |
-| 43 | **HOLD-9** 실연동 수동 실행 + 배포 사이트 육안 검증 | **사람** | M7 | 38 (직렬) | 42 | — |
+| 38 | ~~M6 PR 리뷰·머지~~ → 완료 (PR #7, 2026-09-16) | 에이전트 | M6 | 33 (직렬) | 37 | git-commit-workflow |
+| 39 | ~~`kakao-sdk-stub.ts` — SDK 라우트 가로채기~~ → 완료. DOM 에 흔적을 남겨 마커를 셀 수 있다 | 에이전트 | M7 | 34 (직렬) | 34,38 | journey-testing |
+| 40 | ~~저니 스펙 → `paste-and-plot.test.ts` (7개 시나리오)~~ → 완료. `no-key` 저니를 따로 뒀다 | 에이전트 | M7 | 35 (직렬) | 39 | journey-testing |
+| 41 | ~~`live-kakao.test.ts` — 수동 실행, 키 없으면 실패~~ → 완료 (`e2e-live.yml`) | 에이전트 | M7 | 36 (직렬) | 39 | journey-testing |
+| 42 | ~~CI 에 저니 추가 · 실연동은 `workflow_dispatch`~~ → 완료 (`ci.yml` 의 `e2e` 잡, `e2e-live.yml`) | 에이전트 | M7 | 37 (직렬) | 40,41 | — |
+| 43 | **HOLD-9** 실연동 수동 실행 + 배포 사이트 육안 검증 — **콘솔 도메인 등록이 풀린 뒤** | **사람** | M7 | 38 (직렬) | 42 | — |
 | 44 | M7 PR 리뷰·머지 — Fable 에이전트 리뷰 → 승인 시 Claude 머지 | 에이전트 | M7 | 39 (직렬) | 43 | git-commit-workflow |
 
 ## 사람이 할 일만 모아 보기
