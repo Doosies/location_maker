@@ -6,7 +6,8 @@ export type EntryStatus =
   | 'loading' // 조회 중
   | 'found' // 좌표 있음
   | 'notFound' // 조회했지만 결과 없음
-  | 'failed'; // 네트워크·쿼터·SDK 오류
+  | 'failed' // 네트워크·쿼터·SDK 오류
+  | 'skipped'; // 실패했지만 사용자가 그대로 두기로 한 줄
 
 export type Place = {
   lat: number;
