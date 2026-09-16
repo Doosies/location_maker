@@ -27,10 +27,10 @@
 | 12 | `domain/` 경계 검사 (바깥 import 금지) | 에이전트 | M2 | 10 (직렬) | 10,11 | — |
 | 13 | **HOLD-3** M2 PR 리뷰·머지 | **사람** | M2 | 11 (직렬) | 12 | git-commit-workflow |
 | 14 | **HOLD-4** Kakao SDK 공식 문서로 시그니처 대조 (`x`=경도 여부 포함) | **사람** | M3 | 12 (직렬) | 13 | external-library-usage |
-| 15 | 대조 결과를 `docs/findings/kakao-sdk.md` 에 기록 | 에이전트 | M3 | 13 (직렬) | 14 | dev-findings |
-| 16 | `geocoding/port.ts` — GeocodePort 인터페이스 | 에이전트 | M3 | 14 (직렬) | 15 | architecture-design |
-| 17 | `fake-adapter.ts` + 계약 테스트 | 에이전트 | M3 | 15 (직렬) | 16 | tdd-gate-workflow |
-| 18 | `kakao-adapter.ts` (addressSearch → keywordSearch 폴백) | 에이전트 | M3 | 16 (직렬) | 17 | external-library-usage |
+| 15 | ~~대조 결과를 `docs/findings/kakao-sdk.md` 에 기록~~ → 완료 | 에이전트 | M3 | 13 (직렬) | 14 | dev-findings |
+| 16 | ~~`geocoding/port.ts`~~ → 완료. 계약은 `domain/types.ts` 에 있고 여기서 re-export 한다 | 에이전트 | M3 | 14 (직렬) | 15 | architecture-design |
+| 17 | ~~`fake-adapter.ts` + 계약 테스트~~ → 완료. 계약 테스트는 두 구현에 함께 돈다 | 에이전트 | M3 | 15 (직렬) | 16 | tdd-gate-workflow |
+| 18 | ~~`kakao-adapter.ts` (addressSearch → keywordSearch 폴백)~~ → 완료 | 에이전트 | M3 | 16 (직렬) | 17 | external-library-usage |
 | 19 | **HOLD-3** M3 PR 리뷰·머지 | **사람** | M3 | 17 (직렬) | 18 | git-commit-workflow |
 | 20 | `state/store.ts` — 순서 불변식 테스트 포함 | 에이전트 | M4 | 18 (직렬) | 19 | tdd-gate-workflow |
 | 21 | `AddressInput.tsx` | 에이전트 | M4 | 19 (병렬) | 20 | design-system |
@@ -64,10 +64,10 @@
 
 | # | 무엇 | 어디서 | 언제 |
 | --- | --- | --- | --- |
-| 0 | 기본 브랜치를 `main` 으로 | 저장소 Settings → General | 지금 |
+| ~~0~~ | ~~기본 브랜치를 `main` 으로~~ → 완료 (2026-09-11) | 저장소 Settings → General | 지금 |
 | 3 | spec-sync 반입 방식 승인 | 스레드에서 한마디 | M1 중 |
-| 7 | Pages Source 를 GitHub Actions 로 | 저장소 Settings → Pages | M1 중 |
-| 14 | Kakao SDK 시그니처 대조 | Kakao 공식 문서 | M3 착수 전 |
+| ~~7~~ | ~~Pages Source 를 GitHub Actions 로~~ → 완료 (2026-09-16) | 저장소 Settings → Pages | M1 중 |
+| ~~14~~ | ~~Kakao SDK 시그니처 대조~~ → 완료 (2026-09-16) | Kakao 공식 문서 | M3 착수 전 |
 | 26 | 앱 생성 + 쿼터 확인 | Kakao Developers 콘솔 | M5 착수 전 |
 | 27 | JS 앱키 → Secrets `KAKAO_JS_KEY` | 저장소 Settings → Secrets | M5 착수 전 |
 | 28 | 도메인 2개 등록 | Kakao 콘솔 → 플랫폼 → Web | M5 착수 전 |

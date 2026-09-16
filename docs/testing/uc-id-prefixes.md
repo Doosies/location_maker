@@ -18,6 +18,8 @@
 | `LM-PARSE` | `src/domain/__tests__/parse-addresses.test.ts` | 붙여넣은 텍스트를 주소 줄로 나누기 |
 | `LM-QUEUE` | `src/domain/__tests__/geocode-queue.test.ts` | 지오코딩 큐 — 동시 실행·중단·쿼터 |
 | `LM-BOUNDARY` | `src/domain/__tests__/boundary.test.ts` | `src/domain/` 이 바깥을 끌어오지 않는지 |
+| `LM-PORT` | `src/geocoding/__tests__/port-contract.test.ts` | `GeocodePort` 계약 — 두 구현 공통 |
+| `LM-KAKAO` | `src/geocoding/__tests__/kakao-adapter.test.ts` | Kakao 어댑터 — 좌표 축·콜백·status 분류 |
 
 ## 아직 쓰지 않은 PREFIX
 
@@ -25,8 +27,6 @@
 
 | PREFIX | 대상 | 단계 |
 | --- | --- | --- |
-| `LM-PORT` | `GeocodePort` 계약 | M3 |
-| `LM-KAKAO` | Kakao 어댑터 | M3 |
 | `LM-STORE` | 상태 저장소와 순서 불변식 | M4 |
 | `LM-INPUT` | 주소 입력 컴포넌트 | M4 |
 | `LM-LIST` | 결과 목록 컴포넌트 | M4 |
