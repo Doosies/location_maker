@@ -85,7 +85,7 @@ test('UC-LME-PLOT-005: 링크를 복사해 열면 같은 목록이 복원되고 
 
   await page.getByLabel('주소 입력').fill('서울 중구 을지로 65\n성남시 분당구 판교역로 235');
   await page.getByRole('button', { name: '링크 복사' }).click();
-  await expect(page.getByText('링크를 복사했다.')).toBeVisible();
+  await expect(page.getByText('링크를 복사했습니다.')).toBeVisible();
   const link = await page.evaluate(() => navigator.clipboard.readText());
 
   const opened = await context.newPage();

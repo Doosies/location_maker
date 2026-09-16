@@ -20,11 +20,11 @@ export type LoadFailure =
 export type LoadResult = { ok: true } | { ok: false; reason: LoadFailure };
 
 export const LOAD_FAILURE_MESSAGE: Record<LoadFailure, string> = {
-  'no-key': '지도를 띄울 키가 없다. VITE_KAKAO_JS_KEY 를 넣어야 한다.',
+  'no-key': '지도를 띄울 키가 없습니다. VITE_KAKAO_JS_KEY 를 넣어 주세요.',
   script:
-    '지도 스크립트를 받지 못했다. 네트워크, VITE_KAKAO_JS_KEY 값, Kakao 콘솔의 도메인 등록을 확인한다.',
-  timeout: '지도 스크립트가 제때 응답하지 않았다. 새로고침해 보자.',
-  init: '지도 스크립트는 받았는데 초기화되지 않았다. 새로고침해도 같으면 키와 도메인을 확인한다.',
+    '지도 스크립트를 받지 못했습니다. 네트워크, VITE_KAKAO_JS_KEY 값, Kakao 콘솔의 도메인 등록을 확인해 주세요.',
+  timeout: '지도 스크립트가 제때 응답하지 않았습니다. 새로고침해 주세요.',
+  init: '지도 스크립트는 받았는데 초기화되지 않았습니다. 새로고침해도 같으면 키와 도메인을 확인해 주세요.',
 };
 
 /** `libraries=services` 를 빼면 `services.Geocoder` 가 없다. 어댑터가 통째로 죽는다. */

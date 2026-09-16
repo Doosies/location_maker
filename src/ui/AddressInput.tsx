@@ -27,7 +27,7 @@ export function AddressInput({ value, onChange, onSubmit, disabled = false, text
         주소 입력
       </label>
       <p className="address-input__hint">
-        한 줄에 주소 하나. 엑셀의 주소 열을 그대로 붙여넣어도 된다.
+        한 줄에 주소 하나를 넣어 주세요. 엑셀의 주소 열을 그대로 붙여넣어도 됩니다.
       </p>
       <textarea
         id={textareaId}
@@ -40,7 +40,7 @@ export function AddressInput({ value, onChange, onSubmit, disabled = false, text
         onChange={(event) => onChange(event.target.value)}
       />
       <p className="address-input__count" aria-live="polite">
-        {lines === 0 ? '아직 주소가 없다' : `${lines}줄`}
+        {lines === 0 ? '아직 주소가 없습니다' : `${lines}줄`}
       </p>
       <div className="address-input__actions">
         <button type="button" className="button button--primary" disabled={disabled || lines === 0} onClick={onSubmit}>

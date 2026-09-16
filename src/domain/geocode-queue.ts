@@ -83,7 +83,7 @@ export async function runGeocodeQueue(options: RunGeocodeQueueOptions): Promise<
         // 어댑터가 값 대신 예외를 던진 경우. 계약 위반이지만 큐가 멈출 이유는 아니다.
         result = {
           ok: false,
-          failure: { reason: 'sdk', message: error instanceof Error ? error.message : '조회에 실패했다' },
+          failure: { reason: 'sdk', message: error instanceof Error ? error.message : '조회에 실패했습니다' },
         };
       }
 
