@@ -20,6 +20,9 @@ pnpm build        # dist/ 생성
 
 키가 없어도 전부 동작한다. 지도 자리에 안내 문구가 뜰 뿐이다.
 
+다만 `pnpm install` 은 비공개 저장소 `Doosies/common_agent_system` 에서
+`@cas/spec-sync` 를 받아온다. 그 저장소를 읽을 수 있는 git 인증이 없으면 설치가 실패한다.
+
 ## 기술 선택
 
 | 항목 | 선택 |

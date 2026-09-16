@@ -36,10 +36,20 @@
 
 ### 1. 인터페이스 — `src/geocoding/port.ts`
 
+**계약 자체는 M2 에서 `src/domain/types.ts` 로 들어갔다.** 도메인이 바깥을 import 하지
+않아야 해서, 큐가 쓰는 타입이 도메인 안에 있어야 했기 때문이다. 그러니 `port.ts` 는
+정의하지 않고 **re-export 한다.** 같은 계약을 두 군데에 두면 반드시 어긋난다.
+
+```ts
+export type { GeocodePort, GeocodeResult } from '../domain/types';
+```
+
+계약의 모양은 이렇다.
+
 ```ts
 export type GeocodeResult =
-  | { ok: true; place: NonNullable<Entry['place']> }
-  | { ok: false; failure: NonNullable<Entry['failure']> };
+  | { ok: true; place: Place }
+  | { ok: false; failure: Failure };
 
 export interface GeocodePort {
   geocode(query: string, signal?: AbortSignal): Promise<GeocodeResult>;
@@ -48,6 +58,8 @@ export interface GeocodePort {
 
 성공/실패를 예외가 아니라 값으로 돌려준다. 큐가 항목마다 상태를 기록해야 하고,
 예외는 동시성 코드에서 다루기 번거롭다.
+
+어댑터를 쓰기 전에 [Kakao SDK 실제 시그니처](../findings/kakao-sdk.md) 를 먼저 읽는다.
 
 ### 2. 가짜 어댑터 — `src/geocoding/fake-adapter.ts`
 

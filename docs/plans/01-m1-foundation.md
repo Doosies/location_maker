@@ -33,18 +33,25 @@
 - `playwright.config.ts` — `baseURL` 은 `pnpm preview` 주소
 - Testing Library 설치
 
-### 3. ⛔ HOLD-2 — spec-sync 반입 방식 결정
+### 3. ✅ HOLD-2 — spec-sync 반입 방식 (2026-09-16 결정: **git 의존성**)
 
-`@cas/spec-sync` 를 이 저장소로 가져오는 방법이 둘이다.
+민형 님이 복사(vendoring) 대신 **git 의존성**을 택했다. 상류의 수정이 이어지기를
+원해서다. 그래서 `package.json` 에 이렇게 들어간다.
 
-| 방법 | 장점 | 단점 |
-| --- | --- | --- |
-| **vendoring (권장)** — `tools/spec-sync/` 에 복사 | CI 에 인증이 필요 없다. 파일 수가 적다 | 상류 수정이 자동 반영되지 않는다 |
-| git 의존성 | 상류와 이어진다 | `common_agent_system` 이 **비공개**라 CI 에 PAT 시크릿이 필요하다. 공개 저장소에 비공개 저장소 접근 토큰을 두는 셈이 된다 |
+```
+"@cas/spec-sync": "git+https://github.com/Doosies/common_agent_system.git#<커밋 SHA>&path:/packages/spec-sync"
+```
 
-**vendoring 을 권한다.** 복사한 파일 머리에 출처와 복사 시점을 주석으로 남긴다.
+커밋 SHA 로 고정한다. 브랜치로 걸면 상류가 바뀔 때 이 저장소의 빌드가 소리 없이
+달라진다. 상류를 따라갈 때는 SHA 를 올리고 그것만으로 한 커밋을 만든다.
 
-→ 여기서 멈추고 승인을 기다린다.
+`common_agent_system` 이 **비공개**라 CI 와 로컬 양쪽에 인증이 필요하다.
+읽기 전용 fine-grained PAT 를 저장소 Secret `CAS_READ_TOKEN` 에 두고, 워크플로의
+`pnpm install` 앞에서 git credential helper 로 넘긴다. 토큰을 URL 에 박지 않는 이유는
+그 URL 이 로그와 락파일로 새기 쉬워서다.
+
+**부작용:** 포크에서 올라온 PR 은 시크릿을 받지 못하므로 `pnpm install` 에서 실패한다.
+외부 기여를 받게 되면 그때 다시 본다.
 
 ### 4. 테스트 게이트 붙이기
 

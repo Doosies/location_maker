@@ -14,8 +14,9 @@
 | 0 | **HOLD-0** 저장소 Settings → General → Default branch = `main` | **사람** | M1 | 0 (직렬) | 없음 | — |
 | 1 | Vite + React + TS 스캐폴드, `base: '/location_maker/'` | 에이전트 | M1 | 1 (직렬) | 없음 | — |
 | 2 | Vitest(node·jsdom) · Playwright 설정 | 에이전트 | M1 | 2 (직렬) | 1 | — |
-| 3 | **HOLD-2** `@cas/spec-sync` 반입 방식 승인 (vendoring 권장) | **사람** | M1 | 3 (직렬) | 2 | — |
+| 3 | ~~**HOLD-2** `@cas/spec-sync` 반입 방식 승인~~ → **git 의존성**으로 결정 (2026-09-16) | **사람** | M1 | 3 (직렬) | 2 | — |
 | 4 | spec-sync 반입 + 테스트 게이트 + PREFIX 레지스트리 | 에이전트 | M1 | 4 (직렬) | 3 | tdd-gate-workflow |
+| 4b | **HOLD-2b** 읽기 전용 PAT → Secret `CAS_READ_TOKEN` | **사람** | M1 | 4 (직렬) | 3 | — |
 | 5 | `.env.example`(이름만) · `.gitignore` · 키 없을 때 안내 문구 | 에이전트 | M1 | 5 (병렬) | 1 | — |
 | 6 | `ci.yml` · `deploy.yml` 작성 | 에이전트 | M1 | 5 (병렬) | 1 | — |
 | 7 | **HOLD-1** 저장소 Settings → Pages → Source = GitHub Actions | **사람** | M1 | 6 (직렬) | 6 | — |
