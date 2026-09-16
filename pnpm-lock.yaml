@@ -16,8 +16,8 @@ importers:
         version: 19.3.0(react@19.3.0)
     devDependencies:
       '@cas/spec-sync':
-        specifier: git+https://github.com/Doosies/common_agent_system.git#cfbe60f924af901aa0871f2b355471562a3def8b&path:/packages/spec-sync
-        version: git+https://git@github.com:Doosies/common_agent_system.git#cfbe60f924af901aa0871f2b355471562a3def8b&path:/packages/spec-sync
+        specifier: git+https://github.com/Doosies/common_agent_system.git#25bba16ee3e628d1d9e73a836fb0873bace06c1a&path:/packages/spec-sync
+        version: git+https://git@github.com:Doosies/common_agent_system.git#25bba16ee3e628d1d9e73a836fb0873bace06c1a&path:/packages/spec-sync
       '@playwright/test':
         specifier: ^1.56.0
         version: 1.63.0
@@ -153,8 +153,8 @@ packages:
     resolution: {integrity: sha512-Vj1jF3cPfxg7OAfoI7QnVKLoILlm2JF9pnVHrX8qx7AHMiYWT+NDAA7jChlNgRS4WTLc/fD1lXLmPixluj+3Gg==}
     engines: {node: '>=6.9.0'}
 
-  '@cas/spec-sync@git+https://git@github.com:Doosies/common_agent_system.git#cfbe60f924af901aa0871f2b355471562a3def8b&path:/packages/spec-sync':
-    resolution: {commit: cfbe60f924af901aa0871f2b355471562a3def8b, path: /packages/spec-sync, repo: git@github.com:Doosies/common_agent_system.git, type: git}
+  '@cas/spec-sync@git+https://git@github.com:Doosies/common_agent_system.git#25bba16ee3e628d1d9e73a836fb0873bace06c1a&path:/packages/spec-sync':
+    resolution: {commit: 25bba16ee3e628d1d9e73a836fb0873bace06c1a, path: /packages/spec-sync, repo: git@github.com:Doosies/common_agent_system.git, type: git}
     version: 1.0.0
 
   '@csstools/color-helpers@5.1.0':
@@ -1232,7 +1232,7 @@ snapshots:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
 
-  '@cas/spec-sync@git+https://git@github.com:Doosies/common_agent_system.git#cfbe60f924af901aa0871f2b355471562a3def8b&path:/packages/spec-sync': {}
+  '@cas/spec-sync@git+https://git@github.com:Doosies/common_agent_system.git#25bba16ee3e628d1d9e73a836fb0873bace06c1a&path:/packages/spec-sync': {}
 
   '@csstools/color-helpers@5.1.0': {}
 

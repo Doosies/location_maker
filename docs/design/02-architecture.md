@@ -146,7 +146,7 @@ export type Entry = {
 };
 ```
 
-**`quota` 는 Kakao 어댑터가 내지 않는다** (M3, 2026-09-16). SDK 가 쿼터 초과를 별도
+**`quota` 는 Kakao 어댑터가 내지 않는다** (M3, 2026-09-16. 민형 님 승인). SDK 가 쿼터 초과를 별도
 status 로 알려 주지 않아서 서버 오류와 구분되지 않는다. 타입과 큐의 처리 경로는 그대로
 두고 — 가짜 어댑터가 계속 검증한다 — 실제로 구분할 방법이 생기면 그때 쓴다.
 근거는 [findings](../findings/kakao-sdk.md#응답-코드--kakaomapsservicesstatus) 에 있다.
