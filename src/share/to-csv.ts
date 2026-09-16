@@ -39,7 +39,8 @@ export function toCsv(entries: Entry[]): string {
       STATUS_LABEL[entry.status],
       place?.label ?? '',
       place?.roadAddress ?? '',
-      // 좌표를 문자열로 다루는 것은 이 앱의 규칙이다. 숫자로 바꾸면 소수점이 흔들린다.
+      // `Place.lat`/`lng` 는 숫자다. 문자열 규칙은 어댑터 경계의 `x`/`y` 에만 해당한다.
+      // `String(number)` 는 가장 짧은 왕복 표현이라 카카오가 준 소수 자릿수가 그대로 나온다.
       place === undefined ? '' : String(place.lat),
       place === undefined ? '' : String(place.lng),
     ];
@@ -63,6 +64,11 @@ export function csvFileName(now: Date): string {
  *
  * 주소에는 셋 다 흔하다 — `서울 중구 세종대로 110, 서울시청` 같은 줄을 그냥 내보내면
  * 열이 하나 밀려서 좌표가 엉뚱한 칸에 들어간다.
+ */
+/*
+ * 셀이 `=`·`+`·`-`·`@` 로 시작하면 엑셀이 수식으로 읽는다. **막지 않기로 했다** — 값의
+ * 출처가 사용자 자신이 방금 친 주소뿐이고, `'` 를 앞에 붙이면 내려받은 표에 없는 글자가
+ * 생긴다. 남이 준 파일을 읽어 들이는 경로가 생기면 그때 다시 본다.
  */
 function escapeCell(value: string): string {
   if (!/[",\r\n]/.test(value)) return value;

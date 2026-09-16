@@ -209,7 +209,8 @@ export function App({
   const copyLink = useCallback(() => {
     const encoded = encodeAddresses(parseAddresses(text).map((entry) => entry.raw));
     if (!encoded.ok) {
-      setShareNote('주소가 너무 많아 링크에 담을 수 없다. CSV 로 내려받는 편이 낫다.');
+      // 이 순간 목록이 비어 있으면 CSV 버튼은 아직 잠겨 있다. 순서를 같이 알려 준다.
+      setShareNote('주소가 너무 많아 링크에 담을 수 없다. 지도에 표시한 뒤 CSV 로 내려받는 편이 낫다.');
       return;
     }
 
@@ -246,7 +247,7 @@ export function App({
           <p>주소를 여러 줄 붙여넣으면 지도에 표시한다.</p>
         </div>
         <div className="app__actions">
-          <button type="button" className="button button--small" onClick={saveCsv} disabled={entries.length === 0}>
+          <button type="button" className="button button--small" onClick={saveCsv} disabled={entries.length === 0 || running}>
             CSV 내려받기
           </button>
           <button type="button" className="button button--small" onClick={copyLink} disabled={text.trim() === ''}>
@@ -258,7 +259,11 @@ export function App({
         <div className="app__panel">
           <AddressInput
             value={text}
-            onChange={setText}
+            onChange={(value) => {
+              // 오래된 안내가 새 입력에 붙어 있으면 방금 복사한 링크인 줄 안다.
+              setShareNote(null);
+              setText(value);
+            }}
             onSubmit={submit}
             disabled={running || waitingForSdk}
             textareaRef={textareaRef}

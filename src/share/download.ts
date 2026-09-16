@@ -23,7 +23,11 @@ export function downloadText(content: string, fileName: string, deps: DownloadDe
   link.href = url;
   link.download = fileName;
 
-  // 클릭 뒤에 곧바로 거둔다. 남겨 두면 탭이 살아 있는 동안 메모리를 붙잡는다.
+  // Firefox 는 문서에 붙지 않은 `<a download>` 의 click() 을 오래 무시했다. 붙였다 뗀다.
+  doc.body.appendChild(link);
   link.click();
-  revokeUrl(url);
+  link.remove();
+
+  // 한 틱 뒤에 거둔다. 곧바로 거두면 내려받기가 시작되기 전에 URL 이 사라지는 경우가 있다.
+  setTimeout(() => revokeUrl(url), 0);
 }

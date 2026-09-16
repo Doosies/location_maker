@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { App } from '../App';
 import type { GeocodePort, GeocodeResult } from '../domain/types';
-import { decodeAddresses } from '../share/url-state';
+import { decodeAddresses, encodeAddresses } from '../share/url-state';
 import { createStore } from '../state/store';
 
 /**
@@ -153,7 +153,8 @@ describe('앱 조립', () => {
   });
 
   it('UC-LM-APP-008: 링크로 받은 주소를 복원하고 바로 조회한다', async () => {
-    render(<App port={port()} store={createStore()} hash="#a=%EC%84%9C%EC%9A%B8%20%EA%B0%95%EB%82%A8%EA%B5%AC%20%ED%85%8C%ED%97%A4%EB%9E%80%EB%A1%9C%20152" />);
+    const encoded = encodeAddresses(['서울 강남구 테헤란로 152']);
+    render(<App port={port()} store={createStore()} hash={encoded.ok ? encoded.hash : ''} />);
 
     // 받은 쪽에 버튼을 한 번 더 누르게 하지 않는다.
     expect(screen.getByLabelText('주소 입력')).toHaveValue('서울 강남구 테헤란로 152');
@@ -163,7 +164,7 @@ describe('앱 조립', () => {
   });
 
   it('UC-LM-APP-009: 망가진 해시로 열어도 빈 화면으로 시작한다', () => {
-    render(<App port={port()} store={createStore()} hash="#a=%E0%A4%A" />);
+    render(<App port={port()} store={createStore()} hash="#a=!!!망가진!!!" />);
 
     // 링크는 손으로 잘리고 붙는 물건이다. 던지면 사용자가 고칠 수 없는 고장이 된다.
     expect(screen.getByLabelText('주소 입력')).toHaveValue('');
