@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { LOAD_FAILURE_MESSAGE } from '../../src/map/load-kakao-sdk';
+
 /**
  * 키를 넣지 않고 빌드한 화면.
  *
@@ -11,7 +13,9 @@ import { expect, test } from '@playwright/test';
 test('UC-LME-NOKEY-001: 키가 없으면 지도 자리에 넣을 변수 이름이 보인다', async ({ page }) => {
   await page.goto('');
 
-  await expect(page.getByText(/VITE_KAKAO_JS_KEY/)).toBeVisible();
+  // 문구를 그대로 댄다. `/VITE_KAKAO_JS_KEY/` 로는 부족하다 — `script` 실패 문구에도 그
+  // 이름이 들어 있어, 키가 있는데 도메인이 안 맞는 경우까지 초록이 된다.
+  await expect(page.getByText(LOAD_FAILURE_MESSAGE['no-key'])).toBeVisible();
 });
 
 test('UC-LME-NOKEY-002: 키가 없어도 입력과 목록은 그대로 돈다', async ({ page }) => {

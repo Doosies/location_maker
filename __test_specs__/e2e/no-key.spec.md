@@ -13,7 +13,8 @@ target: e2e/__tests__/no-key.test.ts
 
 - **Given** 키 없이 빌드된 화면을 열고
 - **When** 지도 자리를 보면
-- **Then** `VITE_KAKAO_JS_KEY` 가 담긴 안내가 보인다
+- **Then** `LOAD_FAILURE_MESSAGE['no-key']` 문구가 그대로 보인다 (`script` 실패 문구에도
+  같은 변수 이름이 들어 있어, 이름만 찾으면 원인이 달라도 통과한다)
 
 흰 화면이 되면 설정이 빠진 것과 코드가 깨진 것을 구분할 수 없다.
 

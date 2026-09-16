@@ -64,7 +64,9 @@ test('UC-LME-PLOT-003: 고쳐서 다시는 그 줄을 입력창에서 골라 준
 });
 
 test('UC-LME-PLOT-004: 중단을 누르면 멈추고 남은 줄이 대기로 남는다', async ({ page }) => {
-  await installKakaoStub(page, { delayMs: 400 });
+  // 넉넉히 늦춘다. 400ms 면 다섯 줄이 800ms 안에 끝나 느린 러너에서는 `중단` 이 사라진
+  // 뒤에 클릭이 들어갈 수 있다. 재시도가 가려 주는 실패는 없는 편이 낫다.
+  await installKakaoStub(page, { delayMs: 3000 });
   await page.goto('');
 
   await page.getByLabel('주소 입력').fill(FIVE);

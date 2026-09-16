@@ -16,10 +16,21 @@ const KOREA = { south: 33, north: 39, west: 124, east: 132 };
 test('UC-LME-LIVE-001: 진짜 SDK 가 준 좌표가 한국 안에 있다', async ({ page }) => {
   await page.goto('');
 
-  // 키 없이 빌드됐다면 여기서 멈춘다. 이 테스트의 초록은 "실제로 붙었다" 만 뜻해야 한다.
-  await expect(page.getByText(/VITE_KAKAO_JS_KEY/)).toHaveCount(0);
+  // SDK 가 실제로 붙을 때까지 기다린다. 이 테스트의 초록은 "실제로 붙었다" 만 뜻해야 한다.
+  // 로더가 실패하면 지도 자리가 사유 문구로 바뀌므로, 그 문구를 그대로 실패 메시지에
+  // 싣는다 — no-key / script / timeout / init 중 무엇인지 바로 보인다. 변수 이름만 찾는
+  // 단언으로는 구분되지 않는다. `script` 문구에도 같은 이름이 들어 있기 때문이다.
+  const field = page.getByLabel('주소 입력');
+  const mapFailure = page.locator('.map-placeholder');
+  await expect(async () => {
+    if ((await mapFailure.count()) > 0) {
+      throw new Error(`지도를 띄우지 못했다: ${await mapFailure.innerText()}`);
+    }
+    // SDK 가 준비되기 전에는 입력이 잠겨 있다. 풀렸다는 것이 곧 준비됐다는 뜻이다.
+    await expect(field).toBeEnabled({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
 
-  await page.getByLabel('주소 입력').fill('서울 강남구 테헤란로 152');
+  await field.fill('서울 강남구 테헤란로 152');
   await page.getByRole('button', { name: '지도에 표시' }).click();
   await expect(page.getByText('찾음 1')).toBeVisible({ timeout: 15_000 });
 
