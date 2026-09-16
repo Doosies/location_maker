@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { Entry } from '../../domain/types';
 import type { KakaoBounds, KakaoLatLng, KakaoMap, KakaoMapsNamespace, KakaoOverlay } from '../kakao-maps';
@@ -186,5 +187,35 @@ describe('지도 화면', () => {
     render(<MapView entries={[]} apiKey="" />);
 
     expect(await screen.findByText(/VITE_KAKAO_JS_KEY/)).toBeInTheDocument();
+  });
+  it('UC-LM-MAP-010: 마커를 누르면 그 줄의 id 로 onMarkerSelect 를 부른다', async () => {
+    const { maps } = stubSdk();
+    const onMarkerSelect = vi.fn();
+
+    render(<MapView entries={[found('a', '가', 37.5, 127.0)]} maps={maps} onMarkerSelect={onMarkerSelect} />);
+
+    // 실제 SDK 는 CustomOverlay 의 HTML 을 지도 컨테이너 안에 붙인다. 가짜 SDK 는
+    // 그리지 않으므로, 컨테이너에 건 위임이 도는지를 같은 모양의 요소로 확인한다.
+    const container = screen.getByRole('region', { name: '지도' });
+    const marker = document.createElement('div');
+    marker.className = 'marker';
+    marker.dataset.entryId = 'a';
+    container.appendChild(marker);
+
+    await userEvent.click(marker);
+
+    expect(onMarkerSelect).toHaveBeenCalledWith('a');
+  });
+
+  it('UC-LM-MAP-011: 고른 항목의 마커에만 테가 둘린다', () => {
+    const { maps, calls } = stubSdk();
+
+    const entries = [found('a', '가', 37.5, 127.0), found('b', '나', 37.6, 127.1)];
+    const { rerender } = render(<MapView entries={entries} maps={maps} />);
+    rerender(<MapView entries={entries} maps={maps} focusedId="b" />);
+
+    // 어느 점을 고른 것인지 지도에서도 보여야 한다. 목록만 바뀌면 지도는 남의 일이 된다.
+    expect(calls.overlays[0]?.content).not.toContain('marker--focused');
+    expect(calls.overlays[1]?.content).toContain('marker--focused');
   });
 });

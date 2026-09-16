@@ -12,6 +12,7 @@ import { downloadText } from './share/download';
 import { csvFileName, toCsv } from './share/to-csv';
 import { decodeAddresses, encodeAddresses } from './share/url-state';
 import { AddressInput } from './ui/AddressInput';
+import { BottomSheet, type SheetSnap } from './ui/BottomSheet';
 import { ProgressBar } from './ui/ProgressBar';
 import { ResultList } from './ui/ResultList';
 
@@ -29,6 +30,21 @@ export type AppProps = {
   /** 파일 내려받기. jsdom 에는 `createObjectURL` 이 없어 테스트가 갈아 끼운다. */
   download?: (content: string, fileName: string) => void;
 };
+
+/**
+ * 보이는 자리로 스크롤한다. 없는 환경에서는 조용히 넘어간다.
+ *
+ * `scrollIntoView` 는 jsdom 에 없다. 스크롤은 화면을 편하게 하는 일이지 결과를 바꾸는
+ * 일이 아니므로, 없다고 해서 그 위의 동작까지 멈출 이유가 없다.
+ */
+function scrollIntoView(selector: string, block: ScrollLogicalPosition): void {
+  requestAnimationFrame(() => {
+    const target = document.querySelector(selector);
+    if (target instanceof HTMLElement && typeof target.scrollIntoView === 'function') {
+      target.scrollIntoView({ block });
+    }
+  });
+}
 
 /** 입력창에서 `raw` 와 같은 줄을 찾아 선택한다. 없으면 포커스만 옮긴다. */
 function selectLine(field: HTMLTextAreaElement | null, raw: string): void {
@@ -52,6 +68,13 @@ export function App({
   download = downloadText,
 }: AppProps) {
   const [text, setText] = useState('');
+  /**
+   * 바텀 시트가 선 자리. 좁은 화면에서만 뜻이 있다 — 넓은 화면에서는 CSS 가
+   * 시트를 그냥 왼쪽 칸으로 만들고 이 값을 무시한다.
+   *
+   * 첫 화면은 `full` 이다. 아직 아무것도 없는 지도보다 입력창이 먼저 필요하다.
+   */
+  const [snap, setSnap] = useState<SheetSnap>('full');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   /** `고쳐서 다시` 가 고르라고 표시해 둔 원문. 렌더 뒤에 그 줄을 선택한다. */
@@ -105,6 +128,15 @@ export function App({
       abortRef.current = controller;
       store.setEntries(parsed);
       store.setRunning(true);
+      // 마커가 하나씩 찍히는 것을 봐야 한다. 시트가 화면을 다 덮고 있으면 못 본다.
+      setSnap('half');
+      /*
+       * 시트(넓은 화면에서는 왼쪽 패널) 안을 목록까지 내린다.
+       *
+       * 누르고 나면 보고 싶은 것은 방금 넣은 주소가 아니라 결과다. 스크롤이 입력창에
+       * 머물러 있으면 시트를 반만 연 화면에서는 목록이 한 줄도 안 보인다.
+       */
+      scrollIntoView('.result-list', 'start');
 
       try {
         await runGeocodeQueue({
@@ -195,7 +227,29 @@ export function App({
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const select = useCallback((entry: Entry) => {
     setFocusedId(entry.id);
+    // 좁은 화면에서 목록을 고르면 지도를 봐야 한다. 시트가 화면을 다 덮고 있으면
+    // panTo 가 일어난 것을 아무도 못 본다.
+    setSnap((current) => (current === 'full' ? 'half' : current));
   }, []);
+
+  /**
+   * 지도에서 마커를 누르면 그 줄로 되돌아온다.
+   *
+   * 목록 → 지도는 처음부터 있었지만 그 반대가 없었다. 마커가 스무 개 찍힌 화면에서
+   * "저 점이 어느 주소였지" 를 물을 방법이 없었다는 뜻이다.
+   */
+  const selectMarker = useCallback(
+    (id: string) => {
+      setFocusedId(id);
+      setSnap((current) => (current === 'peek' ? 'half' : current));
+      // 목록에서 그 줄이 보이게 한다. 시트를 열어 줬는데 엉뚱한 줄이 보이면 소용없다.
+      //
+      // `li` 로 좁히는 것이 중요하다. 같은 `data-entry-id` 가 지도의 마커에도 붙어 있고,
+      // 지도가 DOM 에서 먼저 오므로 좁히지 않으면 마커를 제자리로 스크롤하다 만다.
+      scrollIntoView(`li[data-entry-id="${CSS.escape(id)}"]`, 'nearest');
+    },
+    [],
+  );
 
   /**
    * 링크 복사와 CSV 내려받기.
@@ -239,61 +293,80 @@ export function App({
     [store],
   );
 
+  /**
+   * `peek` 에서도 사라지지 않는 한 줄. 넓은 화면에서는 목록의 요약 칩이 같은 일을 한다.
+   *
+   * 칩과 **다른 문장**이어야 한다. `찾음 5` 를 여기서도 쓰면 화면에 같은 글이 둘이 되고,
+   * 그 글로 화면을 찾는 저니 테스트가 어느 쪽을 가리키는지 알 수 없게 된다.
+   */
+  const status = `${total}곳 중 ${found}곳 확인${failed === 0 ? '' : ` · ${failed}곳 실패`}`;
+
   return (
     <div className="app">
-      <header className="app__header">
-        <div>
-          <h1>location maker</h1>
-          <p>주소를 여러 줄 붙여넣으면 지도에 표시합니다.</p>
-        </div>
-        <div className="app__actions">
-          <button type="button" className="button button--small" onClick={saveCsv} disabled={entries.length === 0 || running}>
-            CSV 내려받기
-          </button>
-          <button type="button" className="button button--small" onClick={copyLink} disabled={text.trim() === ''}>
-            링크 복사
-          </button>
-        </div>
+      <header className="app__bar">
+        <h1>location maker</h1>
+        <p className="app__tagline">주소를 여러 줄 붙여넣으면 지도에 표시합니다.</p>
       </header>
-      <main className="app__body">
-        <div className="app__panel">
-          <AddressInput
-            value={text}
-            onChange={(value) => {
-              // 오래된 안내가 새 입력에 붙어 있으면 방금 복사한 링크인 줄 안다.
-              setShareNote(null);
-              setText(value);
-            }}
-            onSubmit={submit}
-            disabled={running || waitingForSdk}
-            textareaRef={textareaRef}
-          />
-          {waitingForSdk && (
-            <p className="app__notice" aria-live="polite">
-              {sdkFailure === null
-                ? '지도를 불러오는 중입니다. 준비되면 조회할 수 있습니다.'
-                : '지도를 불러오지 못해 조회를 멈춰 뒀습니다. 오른쪽 안내를 확인해 주세요.'}
-            </p>
-          )}
-          {shareNote !== null && (
-            <p className="app__notice" aria-live="polite">
-              {shareNote}
-            </p>
-          )}
-          {running && <ProgressBar done={done} total={total} onAbort={abort} />}
-          <ResultList entries={entries} onRetry={retry} onSkip={skip} onSelect={select} running={running} />
+      {/* 지도가 바닥이다. 시트와 앱바가 그 위에 얹힌다 — 좁은 화면에서 지도는
+          스크롤해야 나오는 문서의 한 블록이 아니라 화면 그 자체여야 한다. */}
+      <div className="app__map">
+        <MapView entries={entries} focusedId={focusedId} onMarkerSelect={selectMarker} />
+        {/* 지도가 실제로 떠 있을 때만 말한다. 지도 자리에 오류 문구가 떠 있는데
+            "마커가 찍혔다" 고 하면 화면이 서로 다른 말을 한다. */}
+        {kakaoPort !== null && !running && entries.length > 0 && (
+          <p className="app__map-note" aria-live="polite">
+            찾은 {found}곳에 번호 마커를 찍었습니다. 실패 {failed}곳은 목록에만 남습니다.
+          </p>
+        )}
+      </div>
+      {/* 진행 표시는 시트 밖, 지도 위에 둔다. 시트를 내려도 몇 건째인지와 `중단` 이 남는다. */}
+      {running && (
+        <div className="app__progress">
+          <ProgressBar done={done} total={total} onAbort={abort} />
         </div>
-        <div className="app__map">
-          <MapView entries={entries} focusedId={focusedId} />
-          {/* 지도가 실제로 떠 있을 때만 말한다. 지도 자리에 오류 문구가 떠 있는데
-              "마커가 찍혔다" 고 하면 화면이 서로 다른 말을 한다. */}
-          {kakaoPort !== null && !running && entries.length > 0 && (
-            <p className="app__map-note" aria-live="polite">
-              찾은 {found}곳에 번호 마커를 찍었습니다. 실패 {failed}곳은 목록에만 남습니다.
-            </p>
-          )}
-        </div>
-      </main>
+      )}
+      <BottomSheet
+        snap={snap}
+        onSnapChange={setSnap}
+        {...(entries.length === 0
+          ? {}
+          : { head: <p className="sheet__status">{status}</p> })}
+        footer={
+          <div className="app__actions">
+            <button type="button" className="button button--small" onClick={saveCsv} disabled={entries.length === 0 || running}>
+              CSV 내려받기
+            </button>
+            <button type="button" className="button button--small" onClick={copyLink} disabled={text.trim() === ''}>
+              링크 복사
+            </button>
+          </div>
+        }
+      >
+        <AddressInput
+          value={text}
+          onChange={(value) => {
+            // 오래된 안내가 새 입력에 붙어 있으면 방금 복사한 링크인 줄 안다.
+            setShareNote(null);
+            setText(value);
+          }}
+          onSubmit={submit}
+          disabled={running || waitingForSdk}
+          textareaRef={textareaRef}
+        />
+        {waitingForSdk && (
+          <p className="app__notice" aria-live="polite">
+            {sdkFailure === null
+              ? '지도를 불러오는 중입니다. 준비되면 조회할 수 있습니다.'
+              : '지도를 불러오지 못해 조회를 멈춰 뒀습니다. 지도 자리의 안내를 확인해 주세요.'}
+          </p>
+        )}
+        {shareNote !== null && (
+          <p className="app__notice" aria-live="polite">
+            {shareNote}
+          </p>
+        )}
+        <ResultList entries={entries} onRetry={retry} onSkip={skip} onSelect={select} running={running} />
+      </BottomSheet>
     </div>
   );
 }

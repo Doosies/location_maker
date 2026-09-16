@@ -1,5 +1,13 @@
 import { useId, type RefObject } from 'react';
 
+/**
+ * 입력창의 기본 줄 수.
+ *
+ * 4줄이다. 모바일에서 가상 키보드가 올라오면 화면의 절반이 사라지는데, 8줄짜리
+ * 입력창은 그 남은 절반을 혼자 다 쓴다. 넘치는 줄은 스크롤되고, 손잡이로 늘릴 수 있다.
+ */
+const ROWS = 4;
+
 const EXAMPLE = ['서울 강남구 테헤란로 152', '서울 중구 세종대로 110', '부산 해운대구 해운대해변로 264'].join('\n');
 
 export type AddressInputProps = {
@@ -33,7 +41,7 @@ export function AddressInput({ value, onChange, onSubmit, disabled = false, text
         id={textareaId}
         ref={textareaRef}
         className="address-input__field"
-        rows={8}
+        rows={ROWS}
         value={value}
         disabled={disabled}
         placeholder={EXAMPLE}

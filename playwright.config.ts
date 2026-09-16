@@ -92,6 +92,18 @@ export default defineConfig({
           use: { baseURL: 'http://localhost:4173/location_maker/' },
         },
         {
+          // 좁은 화면은 **폭을 실제로 좁혀야** 보인다. 1280px 저니는 모바일
+          // 레이아웃을 한 번도 그리지 않으므로 그쪽 고장을 영영 못 잡는다.
+          name: 'mobile',
+          testMatch: /mobile-layout\.test\.ts/,
+          use: {
+            baseURL: 'http://localhost:4173/location_maker/',
+            viewport: { width: 390, height: 844 },
+            isMobile: true,
+            hasTouch: true,
+          },
+        },
+        {
           name: 'no-key',
           testMatch: /no-key\.test\.ts/,
           use: { baseURL: 'http://localhost:4174/location_maker/' },
