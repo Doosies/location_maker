@@ -79,3 +79,27 @@ test('UC-LME-MOBILE-004: 마커를 누르면 그 줄이 목록에서 보인다',
   await expect(third).toContainText('성남시 분당구 판교역로 235');
   await expect(third).toBeInViewport();
 });
+
+test('UC-LME-MOBILE-005: 접힌 시트에서 바닥 버튼에 포커스가 가도 셸이 밀리지 않는다', async ({ page }) => {
+  await installKakaoStub(page);
+  await page.goto('');
+
+  // `peek` 에서는 시트 안의 것들이 상자를 넘칠 수 있다. `.app` 이 스크롤 컨테이너이면
+  // 그때 포커스가 셸 전체를 밀어 올리고, 스크롤바가 없어 되돌릴 길이 없다.
+  await page.getByRole('button', { name: '목록 접기' }).click();
+  await expect(page.locator('.sheet')).toHaveAttribute('data-snap', 'peek');
+
+  await page.getByRole('button', { name: 'CSV 내려받기' }).focus();
+
+  const shell = await page.evaluate(() => {
+    const app = document.querySelector('.app');
+    const map = document.querySelector('.app__map');
+    return {
+      scrollTop: app === null ? -1 : app.scrollTop,
+      mapTop: map === null ? -1 : Math.round(map.getBoundingClientRect().top),
+    };
+  });
+  expect(shell.scrollTop).toBe(0);
+  expect(shell.mapTop).toBe(0);
+});
+

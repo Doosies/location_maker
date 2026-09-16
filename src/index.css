@@ -23,14 +23,24 @@
   --ok-soft: #e0f3ea;
   --warn: #b4520f;
   --danger: #b3261e;
+  --danger-ink: #ffffff;
   --danger-soft: #fbe6e4;
   --shadow: 0 1px 2px rgba(17, 24, 38, 0.06), 0 10px 28px -14px rgba(17, 24, 38, 0.3);
   --shadow-sheet: 0 -6px 24px -12px rgba(17, 24, 38, 0.35);
 
-  /* 시트가 설 수 있는 세 자리. 데스크톱에서는 쓰이지 않는다. */
-  --sheet-peek: 5rem;
+  /*
+   * 시트가 설 수 있는 세 자리. 데스크톱에서는 쓰이지 않는다.
+   *
+   * `peek` 은 손잡이(44) + 머리 한 줄(30) + 목록 한 자락(14) + 바닥 띠(65) 가 다 들어가는
+   * 높이다. 모자라면 바닥 띠가 상자 밖으로 흘러 화면 아래에 걸리고, 보이지 않는데
+   * Tab 으로는 닿는 버튼이 생긴다.
+   *
+   * `full` 은 앱바만큼 비워 둔다. 앱바는 `safe-top` 만큼 내려오므로 그 몫도 함께
+   * 빼야 노치 기기에서 시트가 앱바를 덮지 않는다.
+   */
+  --sheet-peek: 10rem;
   --sheet-half: 48dvh;
-  --sheet-full: calc(100% - 3.25rem);
+  --sheet-full: calc(100% - 3.25rem - var(--safe-top));
 
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -58,6 +68,8 @@
     --ok-soft: #142b22;
     --warn: #f0a35e;
     --danger: #ff8a80;
+    /* 다크의 `--danger` 는 밝은 산호색이라 흰 글자가 2.3:1 밖에 안 된다. */
+    --danger-ink: #0d1117;
     --danger-soft: #2e1a19;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 28px -14px rgba(0, 0, 0, 0.8);
     --shadow-sheet: 0 -6px 24px -12px rgba(0, 0, 0, 0.8);
@@ -87,7 +99,13 @@ body {
 .app {
   position: relative;
   height: 100%;
-  overflow: hidden;
+  /*
+   * `hidden` 이 아니라 `clip` 이다. `hidden` 은 잘라 내면서 **스크롤 컨테이너가
+   * 된다** — 흘러넘친 자식에 포커스가 가면 브라우저가 이 상자를 프로그램적으로
+   * 스크롤하고, 스크롤바가 없으니 사용자가 되돌릴 길이 없다. 앱바와 지도가 잘린
+   * 채로 남는다. `clip` 은 잘라 내기만 한다.
+   */
+  overflow: clip;
   isolation: isolate;
 }
 
@@ -197,6 +215,8 @@ body {
   border-top: 1px solid var(--line);
   border-radius: 1rem 1rem 0 0;
   box-shadow: var(--shadow-sheet);
+  /* 같은 이유로 `clip` 이다. 자리를 옮기는 동안 내용이 상자 밖에 그려지지 않는다. */
+  overflow: clip;
   transition: height 220ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 
@@ -218,7 +238,7 @@ body {
   display: grid;
   place-items: center;
   /* 손잡이 자체가 44px 타깃이다. 시트를 여는 가장 잦은 동작이다. */
-  min-height: 2.25rem;
+  min-height: 2.75rem;
   padding: 0.5rem 0;
   border: 0;
   background: none;
@@ -285,9 +305,18 @@ body {
   .app {
     display: grid;
     grid-template-columns: 26rem minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr);
+    /*
+     * 진행 띠에도 자리를 준다. 자리가 없으면 자동 배치가 **암시적 세 번째 행**을
+     * 만들어 `1fr` 행을 그만큼 줄이고, 그때 지도 컨테이너 높이가 조회 중에 줄었다
+     * 늘어난다. Kakao 는 스타일에 의한 컨테이너 크기 변경을 스스로 relayout 하지
+     * 않으므로 조회가 끝난 뒤 아래쪽에 타일 없는 띠가 남는다.
+     * 지도는 세 행을 다 쓰므로 크기가 변하지 않는다. 조회 중이 아니면 이 행은 비어
+     * 0 이 된다.
+     */
+    grid-template-rows: auto auto minmax(0, 1fr);
     grid-template-areas:
       'bar map'
+      'progress map'
       'sheet map';
   }
 
@@ -317,10 +346,13 @@ body {
 
   .app__progress {
     position: static;
+    grid-area: progress;
     box-shadow: none;
     border: 0;
-    padding: 0;
-    background: none;
+    border-right: 1px solid var(--line);
+    border-radius: 0;
+    padding: 0 1.1rem 0.6rem;
+    background: var(--surface);
   }
 
   .app__map-note {
@@ -618,7 +650,7 @@ body {
 .result-item--notFound .result-item__badge,
 .result-item--failed .result-item__badge {
   background: var(--danger);
-  color: #fff;
+  color: var(--danger-ink);
 }
 
 .result-item__body {

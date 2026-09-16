@@ -20,24 +20,72 @@ export type MapViewProps = {
   apiKey?: string;
 };
 
-function markerContent(spec: MarkerSpec, focused: boolean): string {
-  // 번호는 목록 자리 번호다. 사용자가 목록과 지도를 눈으로 짝지을 유일한 단서다.
-  //
-  // `data-entry-id` 가 붙어 있어야 컨테이너에 건 클릭 한 번으로 어느 마커가 눌렸는지
-  // 알 수 있다. CustomOverlay 는 자기 DOM 요소를 내주지 않으므로 오버레이마다
-  // 리스너를 걸 방법이 없다 — 위임이 유일한 길이다.
-  const className = focused ? 'marker marker--focused' : 'marker';
-  return `<div class="${className}" data-entry-id="${escapeHtml(spec.id)}" title="${escapeHtml(spec.title)}">${spec.number}</div>`;
+/**
+ * 마커 하나를 **요소로** 만든다. HTML 문자열이 아니다.
+ *
+ * `CustomOverlay` 는 `content` 로 요소를 받는다. 요소를 주면 우리가 그 요소를 계속
+ * 들고 있을 수 있어, 클릭 리스너를 직접 걸고 테도 클래스 하나로 갈아 끼울 수 있다.
+ * 문자열을 주면 오버레이가 만든 DOM 에 닿을 길이 없어, 클릭이 지도 컨테이너까지
+ * 버블되기를 기대하는 수밖에 없다 — SDK 가 `clickable` 오버레이의 이벤트를 어떻게
+ * 다루는지에 앱이 매달리게 된다.
+ */
+function createMarker(spec: MarkerSpec, onSelect: () => void): HTMLDivElement {
+  const element = document.createElement('div');
+  element.className = 'marker';
+  element.dataset.entryId = spec.id;
+  element.addEventListener('click', onSelect);
+  paintMarker(element, spec, false);
+  return element;
 }
 
-function escapeHtml(value: string): string {
-  return value.replace(/[&<>"]/g, (ch) => `&#${ch.charCodeAt(0)};`);
+/** 번호·제목·테를 지금 값으로 맞춘다. 요소는 그대로 두고 속성만 바꾼다. */
+function paintMarker(element: HTMLDivElement, spec: MarkerSpec, focused: boolean): void {
+  // 번호는 목록 자리 번호다. 사용자가 목록과 지도를 눈으로 짝지을 유일한 단서다.
+  element.textContent = String(spec.number);
+  element.title = spec.title;
+  element.classList.toggle('marker--focused', focused);
+}
+
+/**
+ * 지도 컨테이너 위를 덮고 있는 것만큼의 여백.
+ *
+ * 좁은 화면에서 지도는 화면 전체이고 앱바와 시트가 그 위에 얹힌다. 여백 없이 범위를
+ * 맞추면 마커 절반이 시트 뒤에 숨는다 — "마커가 찍히는 것을 보면서" 가 이 화면의
+ * 요점인데 정작 절반을 못 보게 된다.
+ *
+ * 덮개를 이름으로 찾지 않고 **겹치는지 재서** 정한다. 넓은 화면에서는 같은 요소들이
+ * 지도와 가로로 겹치지 않으므로 저절로 0 이 된다 — 폭을 묻는 분기가 필요 없다.
+ */
+function overlayPadding(container: HTMLElement): { top: number; bottom: number } {
+  const box = container.getBoundingClientRect();
+  if (box.height === 0) return { top: 0, bottom: 0 };
+
+  let top = 0;
+  let bottom = 0;
+  for (const node of document.querySelectorAll('[data-map-overlay]')) {
+    const rect = node.getBoundingClientRect();
+    // 가로로 안 겹치면 지도를 가리지 않는다. 넓은 화면의 왼쪽 패널이 그렇다.
+    if (rect.width === 0 || rect.right <= box.left || rect.left >= box.right) continue;
+    if (node.getAttribute('data-map-overlay') === 'top') {
+      top = Math.max(top, rect.bottom - box.top);
+    } else {
+      bottom = Math.max(bottom, box.bottom - rect.top);
+    }
+  }
+
+  top = Math.max(0, Math.round(top));
+  bottom = Math.max(0, Math.round(bottom));
+  // 남는 자리가 없으면 여백을 접는다. 높이보다 큰 여백을 주면 SDK 가 무엇을 할지 모른다.
+  if (top + bottom > box.height * 0.7) return { top: 0, bottom: 0 };
+  return { top, bottom };
 }
 
 export function MapView({ entries, focusedId = null, onMarkerSelect, maps, apiKey }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<KakaoMap | null>(null);
-  const overlaysRef = useRef(new Map<string, { overlay: KakaoOverlay; spec: MarkerSpec }>());
+  const overlaysRef = useRef(
+    new Map<string, { overlay: KakaoOverlay; spec: MarkerSpec; element: HTMLDivElement }>(),
+  );
   const [sdk, setSdk] = useState<KakaoMapsNamespace | null>(maps ?? null);
   const [failure, setFailure] = useState<LoadFailure | null>(null);
 
@@ -67,11 +115,8 @@ export function MapView({ entries, focusedId = null, onMarkerSelect, maps, apiKe
   }, [key, maps]);
 
   /**
-   * 마커 클릭. 오버레이가 아니라 **컨테이너**에 한 번 건다.
-   *
-   * 오버레이는 매 갱신마다 만들어지고 사라지므로 오버레이마다 리스너를 걸면
-   * 걷어 내는 것을 한 번만 빠뜨려도 유령 핸들러가 쌓인다. 컨테이너는 하나이고
-   * 컴포넌트와 같이 산다.
+   * 마커 클릭을 받을 콜백. 리스너는 마커 요소에 걸려 있고 그 요소는 오버레이와 같이
+   * 사라지므로, 걷어 낼 것이 따로 없다. 여기서는 **최신 콜백**만 들고 있으면 된다.
    */
   const selectRef = useRef(onMarkerSelect);
   selectRef.current = onMarkerSelect;
@@ -84,24 +129,6 @@ export function MapView({ entries, focusedId = null, onMarkerSelect, maps, apiKe
    */
   const focusedRef = useRef(focusedId);
   focusedRef.current = focusedId;
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (container === null) return;
-
-    const onClick = (event: MouseEvent) => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      const marker = target.closest('[data-entry-id]');
-      const id = marker?.getAttribute('data-entry-id');
-      if (id === null || id === undefined) return;
-      selectRef.current?.(id);
-    };
-
-    container.addEventListener('click', onClick);
-    return () => container.removeEventListener('click', onClick);
-    // 컨테이너가 있고 없고는 `failure` 가 정한다. sdk 로딩은 컨테이너를 바꾸지 않는다.
-  }, [failure]);
 
   // 지도는 한 번만 만든다. 컨테이너가 살아 있는 동안 같은 인스턴스를 쓴다.
   useEffect(() => {
@@ -132,18 +159,20 @@ export function MapView({ entries, focusedId = null, onMarkerSelect, maps, apiKe
       const held = overlays.get(spec.id);
       if (held === undefined) continue;
       held.overlay.setPosition(new sdk.LatLng(spec.lat, spec.lng));
-      held.overlay.setContent(markerContent(spec, spec.id === focusedRef.current));
+      paintMarker(held.element, spec, spec.id === focusedRef.current);
       held.spec = spec;
     }
     for (const spec of added) {
+      const element = createMarker(spec, () => selectRef.current?.(spec.id));
+      paintMarker(element, spec, spec.id === focusedRef.current);
       const overlay = new sdk.CustomOverlay({
         position: new sdk.LatLng(spec.lat, spec.lng),
-        content: markerContent(spec, spec.id === focusedRef.current),
+        content: element,
         yAnchor: 1,
         clickable: true,
       });
       overlay.setMap(map);
-      overlays.set(spec.id, { overlay, spec });
+      overlays.set(spec.id, { overlay, spec, element });
     }
 
     // 마커가 하나도 안 바뀌었으면 범위도 건드리지 않는다. 조회 중에 상태만 바뀌어도
@@ -158,7 +187,10 @@ export function MapView({ entries, focusedId = null, onMarkerSelect, maps, apiKe
       const bounds = new sdk.LatLngBounds();
       bounds.extend(new sdk.LatLng(view.south, view.west));
       bounds.extend(new sdk.LatLng(view.north, view.east));
-      map.setBounds(bounds);
+      // 앱바와 시트가 덮은 만큼 안쪽으로 맞춘다. 좌우 여백은 마커 지름의 절반쯤이면
+      // 가장자리 마커가 잘리지 않는다.
+      const inset = containerRef.current === null ? { top: 0, bottom: 0 } : overlayPadding(containerRef.current);
+      map.setBounds(bounds, inset.top + 16, 24, inset.bottom + 16, 24);
     }
   }, [entries, sdk]);
 
@@ -170,7 +202,7 @@ export function MapView({ entries, focusedId = null, onMarkerSelect, maps, apiKe
     // 고른 것이 바뀌면 이전 마커의 테를 지워야 한다. 전체를 다시 칠하는 편이
     // 직전 선택을 따로 기억하는 것보다 틀릴 구석이 적다 — 마커는 많아야 수십 개다.
     for (const [id, held] of overlaysRef.current) {
-      held.overlay.setContent(markerContent(held.spec, id === focusedId));
+      paintMarker(held.element, held.spec, id === focusedId);
     }
 
     if (focusedId === null) return;

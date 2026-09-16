@@ -97,5 +97,12 @@ describe('바텀 시트', () => {
     });
 
     expect(onSnapChange).toHaveBeenCalledWith('half');
+
+    // 마우스는 끌었더라도 `pointerup` 뒤에 `click` 을 한 번 더 낸다. 그것까지 자리를
+    // 옮기면 끌어서 세운 시트가 곧바로 다음 자리로 튄다.
+    act(() => {
+      handle.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(onSnapChange).toHaveBeenCalledTimes(1);
   });
 });

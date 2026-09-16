@@ -55,7 +55,7 @@ export const STUB_KEYWORDS: Record<string, { lat: number; lng: number; place: st
   },
 };
 
-/** 마커가 만든 요소에 붙는 클래스. 테스트는 이것을 센다. */
+/** 마커 요소에 스텁이 얹는 클래스. 테스트는 이것을 센다. */
 export const MARKER_SELECTOR = '.e2e-marker';
 
 export type StubOptions = {
@@ -106,8 +106,6 @@ function stubScript(delayMs: number): string {
   };
 
   function CustomOverlay(options) {
-    this.element = document.createElement('div');
-    this.element.className = 'e2e-marker';
     this.setContent(options.content);
     this.setPosition(options.position);
   }
@@ -119,7 +117,18 @@ function stubScript(delayMs: number): string {
     this.element.dataset.lat = String(latlng.getLat());
     this.element.dataset.lng = String(latlng.getLng());
   };
-  CustomOverlay.prototype.setContent = function (content) { this.element.innerHTML = content; };
+  // 앱은 문자열이 아니라 **요소**를 넘긴다 (마커에 직접 리스너를 걸기 위해서다).
+  // 그 요소를 그대로 쓰고 표시용 클래스만 얹는다 — 한 겹 감싸면 테스트의 클릭이
+  // 겉껍데기에 떨어져 리스너가 있는 요소에 닿는지가 운에 달린다.
+  CustomOverlay.prototype.setContent = function (content) {
+    if (typeof content === 'string') {
+      if (this.element === undefined) this.element = document.createElement('div');
+      this.element.innerHTML = content;
+    } else {
+      this.element = content;
+    }
+    this.element.classList.add('e2e-marker');
+  };
 
   var Status = { OK: 'OK', ZERO_RESULT: 'ZERO_RESULT', ERROR: 'ERROR' };
 

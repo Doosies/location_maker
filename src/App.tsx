@@ -302,8 +302,9 @@ export function App({
   const status = `${total}곳 중 ${found}곳 확인${failed === 0 ? '' : ` · ${failed}곳 실패`}`;
 
   return (
-    <div className="app">
-      <header className="app__bar">
+    // `main` 이다. 스크린 리더의 "본문으로 건너뛰기" 가 닿을 자리가 있어야 한다.
+    <main className="app">
+      <header className="app__bar" data-map-overlay="top">
         <h1>location maker</h1>
         <p className="app__tagline">주소를 여러 줄 붙여넣으면 지도에 표시합니다.</p>
       </header>
@@ -367,6 +368,6 @@ export function App({
         )}
         <ResultList entries={entries} onRetry={retry} onSkip={skip} onSelect={select} running={running} />
       </BottomSheet>
-    </div>
+    </main>
   );
 }
