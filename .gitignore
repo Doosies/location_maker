@@ -1,8 +1,5 @@
 node_modules
 dist
-dist-e2e
-dist-e2e-no-key
-dist-e2e-live
 .env.local
 .env.*.local
 playwright-report

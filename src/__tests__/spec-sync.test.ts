@@ -14,8 +14,7 @@ describe('spec-sync', () => {
     expect(
       checkSpecSync({
         packageRoot,
-        // e2e 도 같은 규약을 따른다. 저니 스펙이 테스트와 어긋나면 여기서 잡힌다.
-        testDirs: ['src', 'e2e'],
+        testDirs: ['src'],
         knownPrefixes: registry.map((row) => row.prefix),
       }),
     ).toEqual([]);
