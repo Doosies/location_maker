@@ -99,4 +99,21 @@ describe('결과 목록', () => {
 
     expect(screen.getByText('조회 중')).toBeInTheDocument();
   });
+
+  it('UC-LM-LIST-009: 찾은 항목을 고르면 그 항목으로 알린다', async () => {
+    const onSelect = vi.fn<(entry: Entry) => void>();
+    render(<ResultList entries={MIXED} onRetry={vi.fn()} onSkip={vi.fn()} onSelect={onSelect} />);
+
+    await userEvent.click(screen.getByRole('button', { name: '서울 중구 을지로 65' }));
+
+    // 이것이 지도를 그 마커로 옮기는 유일한 통로다.
+    expect(onSelect).toHaveBeenCalledWith(MIXED[2]);
+  });
+
+  it('UC-LM-LIST-010: 좌표가 없는 항목은 고를 수 없다', () => {
+    render(<ResultList entries={MIXED} onRetry={vi.fn()} onSkip={vi.fn()} onSelect={vi.fn()} />);
+
+    // 마커가 없는 줄에 눌리는 버튼을 두면 아무 일도 없는 것이 고장으로 보인다.
+    expect(screen.queryByRole('button', { name: '있을 리 없는 주소' })).not.toBeInTheDocument();
+  });
 });

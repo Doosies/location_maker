@@ -96,14 +96,16 @@ describe('스토어', () => {
     expect(store.getSnapshot()).toEqual({ entries: [], running: false });
   });
 
-  it('UC-LM-STORE-008: countByStatus 는 못 찾음과 오류를 함께 센다', () => {
+  it('UC-LM-STORE-008: countByStatus 는 못 찾음·오류·건너뜀을 함께 센다', () => {
     const entries: Entry[] = [
       { ...entry('a', 'a'), status: 'found' },
       { ...entry('b', 'b'), status: 'notFound' },
       { ...entry('c', 'c'), status: 'failed' },
-      { ...entry('d', 'd'), status: 'loading' },
+      // 건너뛴 줄도 "안 된 줄" 이다. 요약에서 빼면 숫자 합이 맞지 않는다.
+      { ...entry('d', 'd'), status: 'skipped' },
+      { ...entry('e', 'e'), status: 'loading' },
     ];
 
-    expect(countByStatus(entries)).toEqual({ found: 1, failed: 2, done: 3, total: 4 });
+    expect(countByStatus(entries)).toEqual({ found: 1, failed: 3, done: 4, total: 5 });
   });
 });

@@ -14,7 +14,6 @@
 | PREFIX | 테스트 | 대상 |
 | --- | --- | --- |
 | `LM-SPEC-SYNC` | `src/__tests__/spec-sync.test.ts` | 스펙 ↔ 테스트 짝 검사 자체 |
-| `LM-SHELL` | `src/ui/__tests__/MapPlaceholder.test.tsx` | 앱 껍데기, 키 없을 때의 안내 |
 | `LM-PARSE` | `src/domain/__tests__/parse-addresses.test.ts` | 붙여넣은 텍스트를 주소 줄로 나누기 |
 | `LM-QUEUE` | `src/domain/__tests__/geocode-queue.test.ts` | 지오코딩 큐 — 동시 실행·중단·쿼터 |
 | `LM-BOUNDARY` | `src/domain/__tests__/boundary.test.ts` | `src/domain/` 이 바깥을 끌어오지 않는지 |
@@ -25,6 +24,18 @@
 | `LM-LIST` | `src/ui/__tests__/ResultList.test.tsx` | 결과 목록 — 실패 항목 자리 보존 |
 | `LM-PROGRESS` | `src/ui/__tests__/ProgressBar.test.tsx` | 진행 표시와 중단 |
 | `LM-APP` | `src/__tests__/App.test.tsx` | 파싱→큐→스토어→화면 연결 |
+| `LM-BOUNDS` | `src/map/__tests__/use-fit-bounds.test.ts` | 지도 범위 계산 (마커 1개 예외) |
+| `LM-SDK` | `src/map/__tests__/load-kakao-sdk.test.ts` | SDK 로더 — 실패 원인 구분 |
+| `LM-MARKER` | `src/map/__tests__/markers.test.ts` | 마커 번호와 갱신 차이 계산 |
+| `LM-MAP` | `src/map/__tests__/MapView.test.tsx` | 지도 화면 — 마커 동기화·범위 |
+
+## 물러난 PREFIX
+
+번호는 append-only 이므로 되쓰지 않는다. 이 자리에 남겨 무엇이었는지 알 수 있게 한다.
+
+| PREFIX | 무엇이었나 | 어디로 갔나 |
+| --- | --- | --- |
+| `LM-SHELL` | 지도 자리 안내 문구 (`MapPlaceholder`) | M5 에서 `MapView` 가 대신한다. 키 없을 때의 안내는 `UC-LM-MAP-008` |
 
 ## 아직 쓰지 않은 PREFIX
 
@@ -32,7 +43,6 @@
 
 | PREFIX | 대상 | 단계 |
 | --- | --- | --- |
-| `LM-BOUNDS` | 지도 범위 계산 | M5 |
 | `LM-URL` | 링크 공유용 해시 인코딩 | M6 |
 | `LM-CSV` | CSV 내보내기 | M6 |
 | `LME-PLOT` | E2E 저니 — 붙여넣기부터 CSV 까지 | M7 |

@@ -8,7 +8,14 @@ const WRAPPING_QUOTES = /^"(.*)"$/s;
 // 그래야 `123-45 어딘가` 같은 번지수를 번호로 오해하지 않는다.
 const LIST_MARKER = /^\d{1,3}\s*[.)]\s+|^\d{1,3}\s+-\s+/;
 
-function normalizeLine(line: string): string {
+/**
+ * 한 줄에서 사람이 붙인 장식(따옴표·번호)을 뗀 값. `Entry.raw` 가 이것과 같다.
+ *
+ * 화면이 "이 항목이 입력창의 어느 줄인가" 를 물을 때 같은 규칙을 써야 한다.
+ * `line.trim()` 으로 비교하면 `1. 서울…` 과 `서울…` 이 다른 줄로 보여 같은 주소가
+ * 두 번 들어간다.
+ */
+export function normalizeLine(line: string): string {
   let value = line.trim();
 
   const unwrapped = WRAPPING_QUOTES.exec(value);
