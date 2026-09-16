@@ -6,11 +6,13 @@ export type ResultListProps = {
   entries: Entry[];
   onRetry: (entry: Entry) => void;
   onSkip: (entry: Entry) => void;
+  /** 찾은 항목을 고르면 지도가 그 마커로 옮겨진다. */
+  onSelect?: (entry: Entry) => void;
   /** 조회 중인가. 항목의 두 버튼을 입력창과 함께 잠근다. */
   running?: boolean;
 };
 
-export function ResultList({ entries, onRetry, onSkip, running = false }: ResultListProps) {
+export function ResultList({ entries, onRetry, onSkip, onSelect, running = false }: ResultListProps) {
   if (entries.length === 0) {
     return (
       <section className="result-list" aria-label="결과 목록">
@@ -36,6 +38,7 @@ export function ResultList({ entries, onRetry, onSkip, running = false }: Result
             index={index + 1}
             onRetry={onRetry}
             onSkip={onSkip}
+            {...(onSelect === undefined ? {} : { onSelect })}
             disabled={running}
           />
         ))}

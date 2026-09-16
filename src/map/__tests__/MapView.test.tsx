@@ -148,6 +148,20 @@ describe('지도 화면', () => {
     expect(calls.overlays).toHaveLength(2);
   });
 
+  it('UC-LM-MAP-009: 마커가 그대로면 범위를 다시 맞추지 않는다', () => {
+    const { maps, calls } = stubSdk();
+    const first = found('a', '가', 37.5, 127.0);
+    const second = found('b', '나', 35.1, 129.1);
+
+    const { rerender } = render(<MapView entries={[first, second]} maps={maps} />);
+    const before = calls.bounds.length;
+    // 조회가 도는 동안 실패 줄의 상태만 바뀌는 흔한 경우다.
+    rerender(<MapView entries={[first, second, missing('c', '다', 'notFound')]} maps={maps} />);
+
+    // 다시 맞추면 사용자가 끌어 놓은 지도가 마커와 무관한 갱신에 원위치된다.
+    expect(calls.bounds).toHaveLength(before);
+  });
+
   it('UC-LM-MAP-006: 고른 항목의 마커로 지도를 옮긴다', () => {
     const { maps, calls } = stubSdk();
     const entries = [found('a', '가', 37.5, 127.0), found('b', '나', 35.1, 129.1)];

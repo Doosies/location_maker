@@ -2,14 +2,24 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { loadKakaoSdk, LOAD_FAILURE_MESSAGE, resetKakaoSdkLoader } from '../load-kakao-sdk';
 
-/** 붙은 스크립트를 손에 쥐고 load·error 를 직접 쏜다. 네트워크는 쓰지 않는다. */
+/**
+ * 붙은 스크립트를 손에 쥐고 load·error 를 직접 쏜다. 네트워크는 쓰지 않는다.
+ *
+ * `head` 는 진짜 요소로 둔다. 배열에만 모아 두면 로더가 실패한 스크립트를 걷어 내는
+ * 것을 흉내 낼 수 없어, 재시도가 같은 요소를 재사용하는 버그를 놓친다.
+ */
 function harness() {
   const scripts: HTMLScriptElement[] = [];
-  const head = { appendChild: (node: HTMLScriptElement) => scripts.push(node) };
+  const head = document.createElement('div');
   const doc = {
-    getElementById: () => null,
+    getElementById: () => head.querySelector('script'),
     createElement: () => document.createElement('script'),
-    head,
+    head: {
+      appendChild: (node: HTMLScriptElement) => {
+        scripts.push(node);
+        head.appendChild(node);
+      },
+    },
   } as unknown as Document;
 
   return { doc, scripts };
@@ -94,7 +104,7 @@ describe('Kakao SDK 로더', () => {
     expect(second).toBe(first);
   });
 
-  it('UC-LM-SDK-008: 실패한 뒤에는 다시 시도할 수 있다', async () => {
+  it('UC-LM-SDK-008: 실패한 뒤에는 스크립트를 새로 붙여 다시 시도한다', async () => {
     const { doc, scripts } = harness();
 
     const first = loadKakaoSdk({ key: 'KEY', doc, scope: {} });
@@ -105,13 +115,21 @@ describe('Kakao SDK 로더', () => {
 
     // 네트워크가 잠깐 끊긴 경우, 새로고침 없이 다시 붙일 수 있어야 한다.
     expect(second).not.toBe(first);
+    // 실패한 요소를 재사용하면 load·error 가 이미 발화한 뒤라 늘 타임아웃으로 끝난다.
+    expect(scripts).toHaveLength(2);
+
+    scripts[1]?.dispatchEvent(new Event('error'));
+    await expect(second).resolves.toEqual({ ok: false, reason: 'script' });
   });
 
   it('UC-LM-SDK-009: 실패 사유마다 할 일이 다른 문구를 준다', () => {
     const messages = Object.values(LOAD_FAILURE_MESSAGE);
 
     expect(new Set(messages).size).toBe(messages.length);
-    expect(LOAD_FAILURE_MESSAGE.init).toContain('도메인');
     expect(LOAD_FAILURE_MESSAGE['no-key']).toContain('VITE_KAKAO_JS_KEY');
+    // 잘못된 키도 미등록 도메인도 이 사유로 온다. 문구가 셋을 함께 가리켜야 한다.
+    expect(LOAD_FAILURE_MESSAGE.script).toContain('VITE_KAKAO_JS_KEY');
+    expect(LOAD_FAILURE_MESSAGE.script).toContain('도메인');
+    expect(LOAD_FAILURE_MESSAGE.script).toContain('네트워크');
   });
 });

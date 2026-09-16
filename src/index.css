@@ -254,6 +254,29 @@ body {
   overflow-wrap: anywhere;
 }
 
+.result-item__select {
+  /* 버튼이지만 글처럼 보인다. 목록의 리듬을 깨지 않으면서 누를 수 있다. */
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.result-item__select:hover {
+  text-decoration: underline;
+}
+
+.app__notice {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  color: #1f2937;
+}
+
 .result-item__detail {
   margin: 0.15rem 0 0;
   font-size: 0.875rem;

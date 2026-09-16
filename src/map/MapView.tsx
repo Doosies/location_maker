@@ -102,6 +102,10 @@ export function MapView({ entries, focusedId = null, maps, apiKey }: MapViewProp
       overlays.set(spec.id, { overlay, spec });
     }
 
+    // 마커가 하나도 안 바뀌었으면 범위도 건드리지 않는다. 조회 중에 상태만 바뀌어도
+    // 범위를 다시 맞추면, 사용자가 끌어 놓은 지도가 마커와 무관한 갱신에 원위치된다.
+    if (added.length + moved.length + removed.length === 0) return;
+
     const view = computeView(specs.map((spec) => ({ lat: spec.lat, lng: spec.lng, label: spec.title, matchedBy: 'address' as const })));
     if (view.kind === 'center') {
       map.setCenter(new sdk.LatLng(view.lat, view.lng));
