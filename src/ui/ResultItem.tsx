@@ -23,13 +23,16 @@ const STATUS_LABEL: Record<Entry['status'], string> = {
 
 export function ResultItem({ entry, index, onRetry, onSkip, onSelect, disabled = false }: ResultItemProps) {
   // 건너뛴 줄은 자리와 원문을 그대로 두되 더 권하지 않는다. 사용자가 이미 결정했다.
+  // 뱃지는 번호를 그대로 쓴다 — 자리를 차지한 것은 사실이고, 흐림과 `건너뜀` 이 이미 말한다.
   const failed = entry.status === 'notFound' || entry.status === 'failed';
-  const marked = failed || entry.status === 'skipped';
 
   return (
-    <li className={`result-item result-item--${entry.status}`}>
+    // `data-entry-id` 는 지도가 쓴다. 마커를 누르면 앱이 이 줄을 찾아 보이게 스크롤한다.
+    <li className={`result-item result-item--${entry.status}`} data-entry-id={entry.id}>
       <span className="result-item__badge" aria-hidden="true">
-        {marked ? '⚠' : index}
+        {/* 이모지가 아니라 글자다. `⚠` 는 기기마다 다르게 그려지고 크기도 제각각이라
+            번호와 나란히 놓으면 줄이 들쭉날쭉해진다. */}
+        {failed ? '!' : index}
       </span>
       <div className="result-item__body">
         {/* 원문은 어떤 상태에서도 그대로 남는다. 실패한 줄을 고치려면 이것이 있어야 한다. */}

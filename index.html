@@ -2,7 +2,12 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover 가 있어야 `env(safe-area-inset-*)` 가 0 이 아닌 값을 준다.
+         노치와 홈 인디케이터를 피해 그리려면 먼저 화면 끝까지 그려야 한다. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- 주소창 색을 앱 바닥과 맞춘다. 테마마다 다른 값을 준다. -->
+    <meta name="theme-color" content="#eef1f6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)" />
     <title>location maker</title>
   </head>
   <body>

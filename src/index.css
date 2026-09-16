@@ -1,50 +1,722 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   색 토큰
+   모든 색은 여기 한 번 선언하고, 다크 모드에서는 값만 바꾼다. 규칙 안에 리터럴을
+   박으면 한쪽 테마에서 반드시 안 보인다 — 예전 안내 문구가 그랬다.
+   중성색은 순수 회색이 아니라 강조색 쪽으로 살짝 파랗게 기울였다. 지도 타일 옆에
+   놓였을 때 카드가 따로 노는 것처럼 보이지 않게 하려는 것이다.
+   ────────────────────────────────────────────────────────────────────────── */
 :root {
   color-scheme: light dark;
+
+  --bg: #eef1f6;
+  --surface: #ffffff;
+  --surface-2: #f5f7fa;
+  --surface-veil: rgba(255, 255, 255, 0.86);
+  --ink: #111826;
+  --ink-muted: #5b6675;
+  --line: #dce3ec;
+  --line-strong: #c3cdda;
+  --accent: #1f4fd8;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3eafc;
+  --ok: #0f7b52;
+  --ok-soft: #e0f3ea;
+  --warn: #b4520f;
+  --danger: #b3261e;
+  --danger-soft: #fbe6e4;
+  --shadow: 0 1px 2px rgba(17, 24, 38, 0.06), 0 10px 28px -14px rgba(17, 24, 38, 0.3);
+  --shadow-sheet: 0 -6px 24px -12px rgba(17, 24, 38, 0.35);
+
+  /* 시트가 설 수 있는 세 자리. 데스크톱에서는 쓰이지 않는다. */
+  --sheet-peek: 5rem;
+  --sheet-half: 48dvh;
+  --sheet-full: calc(100% - 3.25rem);
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
   font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans KR', sans-serif;
   line-height: 1.6;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface-2: #1c232c;
+    --surface-veil: rgba(22, 27, 34, 0.86);
+    --ink: #e7edf5;
+    --ink-muted: #94a3b5;
+    --line: #2b3441;
+    --line-strong: #3b4756;
+    --accent: #5b8cff;
+    --accent-ink: #0d1117;
+    --accent-soft: #1b2740;
+    --ok: #3ecf8e;
+    --ok-soft: #142b22;
+    --warn: #f0a35e;
+    --danger: #ff8a80;
+    --danger-soft: #2e1a19;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 28px -14px rgba(0, 0, 0, 0.8);
+    --shadow-sheet: 0 -6px 24px -12px rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   앱 셸
+   문서 흐름이 아니라 높이가 고정된 셸이다. 페이지 전체 스크롤은 없고, 스크롤은
+   시트(넓은 화면에서는 왼쪽 패널) 안에서만 일어난다. 그래야 지도가 시야에서
+   사라지지 않는다.
+   ────────────────────────────────────────────────────────────────────────── */
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  /* 시트를 끌 때 브라우저가 페이지를 새로고침하려 드는 것을 막는다. */
+  overscroll-behavior: none;
 }
 
 .app {
-  max-width: 60rem;
-  margin: 0 auto;
-  padding: 1.5rem 1rem 3rem;
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
 }
 
-.app__header {
+/* 지도가 바닥이다. 나머지는 그 위에 얹힌다. */
+.app__map {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.app__bar {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: calc(var(--safe-top) + 0.55rem) calc(var(--safe-right) + 0.9rem) 0.55rem
+    calc(var(--safe-left) + 0.9rem);
+  background: var(--surface-veil);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
 }
 
-/* 400px 에서도 두 버튼이 한 줄에 들어간다. 넘치면 제목 아래로 접힌다. */
+.app__bar h1 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.app__tagline {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  /* 좁은 화면에서는 한 줄을 차지할 여유가 없다. 넓어지면 다시 나온다. */
+  display: none;
+}
+
+/* 조회 중에만 지도 위에 떠 있는 띠. 시트를 내려도 진행 상황이 보인다. */
+.app__progress {
+  position: absolute;
+  z-index: 2;
+  top: calc(var(--safe-top) + 3.1rem);
+  left: calc(var(--safe-left) + 0.9rem);
+  right: calc(var(--safe-right) + 0.9rem);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  box-shadow: var(--shadow);
+}
+
+/* 좁은 화면에서는 시트 머리의 한 줄이 같은 것을 말하고, 시트가 이 자리를 덮는다.
+   DOM 에는 남긴다 — `aria-live` 로 결과를 알리는 역할은 폭과 무관하다. */
+.app__map-note {
+  display: none;
+  position: absolute;
+  z-index: 1;
+  left: calc(var(--safe-left) + 0.9rem);
+  right: calc(var(--safe-right) + 0.9rem);
+  bottom: calc(var(--sheet-peek) + 0.6rem);
+  margin: 0;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.4rem;
+  background: var(--surface-veil);
+  backdrop-filter: blur(6px);
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.app__notice {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.4rem;
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
 .app__actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
-.app__header h1 {
-  margin: 0 0 0.25rem;
-  font-size: 1.5rem;
+.app__actions .button {
+  flex: 1 1 0;
 }
 
-.app__header p {
+/* ──────────────────────────────────────────────────────────────────────────
+   바텀 시트
+   ────────────────────────────────────────────────────────────────────────── */
+.sheet {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  height: var(--sheet-peek);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  border-radius: 1rem 1rem 0 0;
+  box-shadow: var(--shadow-sheet);
+  transition: height 220ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.sheet[data-snap='half'] {
+  height: var(--sheet-half);
+}
+
+.sheet[data-snap='full'] {
+  height: var(--sheet-full);
+}
+
+/* 끄는 동안에는 인라인 높이가 이긴다. 손가락을 따라오는 것이 애니메이션보다 빠르다. */
+.sheet[data-dragging] {
+  transition: none;
+}
+
+.sheet__handle {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  /* 손잡이 자체가 44px 타깃이다. 시트를 여는 가장 잦은 동작이다. */
+  min-height: 2.25rem;
+  padding: 0.5rem 0;
+  border: 0;
+  background: none;
+  cursor: grab;
+  touch-action: none;
+}
+
+.sheet__handle:active {
+  cursor: grabbing;
+}
+
+.sheet__grip {
+  display: block;
+  width: 2.5rem;
+  height: 0.25rem;
+  border-radius: 999px;
+  background: var(--line-strong);
+}
+
+.sheet__head {
+  flex: 0 0 auto;
+  padding: 0 calc(var(--safe-right) + 0.9rem) 0.5rem calc(var(--safe-left) + 0.9rem);
+}
+
+.sheet__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  display: grid;
+  align-content: start;
+  gap: 0.8rem;
+  padding: 0 calc(var(--safe-right) + 0.9rem) 0.9rem calc(var(--safe-left) + 0.9rem);
+}
+
+.sheet__footer {
+  flex: 0 0 auto;
+  padding: 0.55rem calc(var(--safe-right) + 0.9rem) calc(var(--safe-bottom) + 0.7rem)
+    calc(var(--safe-left) + 0.9rem);
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+/* `peek` 에서도 사라지지 않는 한 줄. 넓은 화면에서는 목록의 요약 칩이 같은 일을 한다. */
+.sheet__status {
   margin: 0;
-  opacity: 0.75;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet {
+    transition: none;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   넓은 화면 — 같은 DOM, 미디어 쿼리만 다르다
+   시트는 자리를 떠나 왼쪽 칸이 되고, 지도는 오른쪽을 꽉 채운다.
+   ────────────────────────────────────────────────────────────────────────── */
+@media (min-width: 52rem) {
+  .app {
+    display: grid;
+    grid-template-columns: 26rem minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas:
+      'bar map'
+      'sheet map';
+  }
+
+  .app__bar {
+    position: static;
+    grid-area: bar;
+    display: block;
+    padding: 1rem 1.1rem 0.8rem;
+    backdrop-filter: none;
+    border-right: 1px solid var(--line);
+  }
+
+  .app__bar h1 {
+    font-size: 1.25rem;
+  }
+
+  .app__tagline {
+    display: block;
+    margin-top: 0.15rem;
+  }
+
+  .app__map {
+    position: static;
+    grid-area: map;
+    min-height: 0;
+  }
+
+  .app__progress {
+    position: static;
+    box-shadow: none;
+    border: 0;
+    padding: 0;
+    background: none;
+  }
+
+  .app__map-note {
+    display: block;
+    position: absolute;
+    left: auto;
+    right: 1rem;
+    bottom: 1rem;
+    max-width: 24rem;
+    box-shadow: var(--shadow);
+  }
+
+  /* `[data-snap]` 선택자가 `.sheet` 보다 구체적이라, 그냥 `.sheet { height: auto }`
+     로는 모바일 높이가 넓은 화면까지 따라온다 — 패널이 칸을 다 못 채우고 목록이
+     잘린다. 같은 구체성으로 되받아야 한다. */
+  .sheet,
+  .sheet[data-snap] {
+    position: static;
+    grid-area: sheet;
+    height: auto;
+    min-height: 0;
+    border-top: 0;
+    border-right: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: none;
+    transition: none;
+  }
+
+  /* 넓은 화면에서 손잡이는 뜻이 없다. 시트가 끌리지 않으므로 숨긴다. */
+  .sheet__handle,
+  .sheet__head {
+    display: none;
+  }
+
+  .sheet__scroll {
+    padding: 0.9rem 1.1rem;
+  }
+
+  .sheet__footer {
+    padding: 0.7rem 1.1rem 1rem;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   버튼
+   ────────────────────────────────────────────────────────────────────────── */
+.button {
+  /* 손가락으로 누를 수 있어야 한다. */
+  min-height: 2.75rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.45rem;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.button--primary {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.button--primary:hover:not(:disabled) {
+  /* 테두리만 바꾸면 채워진 버튼에서는 보이지 않는다. 바탕을 눌러 준다. */
+  border-color: transparent;
+  color: var(--accent-ink);
+  filter: brightness(0.92);
+}
+
+.button--primary:disabled {
+  /* 배경을 지우고 테두리만 남긴다. 파란 덩어리가 회색으로만 바뀌면 눌러도 되는 줄 안다. */
+  background: transparent;
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.button--danger:not(:disabled) {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.button--small {
+  /* 글자만 작다. 높이는 44px 을 지킨다 — 실패 항목의 버튼이야말로 모바일에서
+     가장 자주 눌리는 대상이다. */
+  padding: 0 0.65rem;
+  font-size: 0.875rem;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   입력
+   ────────────────────────────────────────────────────────────────────────── */
+.address-input {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.address-input__label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.address-input__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.address-input__field {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.45rem;
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  /* 모바일에서 16px 미만이면 iOS 가 입력창을 확대한다. 확대되면 레이아웃이 어긋난다. */
+  font-size: max(1rem, 16px);
+  resize: vertical;
+}
+
+.address-input__field:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.address-input__count {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.address-input__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.address-input__actions .button--primary {
+  flex: 1 1 8rem;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   진행 표시
+   ────────────────────────────────────────────────────────────────────────── */
+.progress__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.progress__text {
+  margin: 0;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress__track {
+  margin-top: 0.5rem;
+  height: 0.3rem;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.progress__fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 120ms linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress__fill {
+    transition: none;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   결과 목록
+   ────────────────────────────────────────────────────────────────────────── */
+.result-list__empty {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.result-list__summary {
+  /* 좁은 화면에서는 시트 머리의 한 줄이 같은 일을 한다. 두 번 말하지 않는다.
+     DOM 에서 빼지는 않는다 — 넓은 화면과 스크린 리더가 이것을 쓴다. */
+  display: none;
+  gap: 0.4rem;
+  margin: 0 0 0.6rem;
+}
+
+.chip {
+  padding: 0.15rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.chip--found {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.chip--failed {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+@media (min-width: 52rem) {
+  .result-list__summary {
+    display: flex;
+  }
+}
+
+.result-list__items {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.result-item {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.45rem;
+  background: var(--surface-2);
+}
+
+/* 실패는 테두리 색만이 아니라 왼쪽 띠로도 말한다. 색만으로 말하면 색각 이상에서
+   사라지고, 흑백으로 인쇄하면 남지 않는다. */
+.result-item--notFound,
+.result-item--failed {
+  border-color: transparent;
+  background: var(--danger-soft);
+  box-shadow: inset 3px 0 0 var(--danger);
+}
+
+.result-item--skipped {
+  opacity: 0.6;
+}
+
+.result-item__badge {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 아직 좌표가 없는 줄은 채우지 않는다. 지도에 없는 것이 목록에서도 비어 보여야 한다. */
+.result-item--pending .result-item__badge,
+.result-item--loading .result-item__badge,
+.result-item--skipped .result-item__badge {
+  background: transparent;
+  color: var(--ink-muted);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.result-item--notFound .result-item__badge,
+.result-item--failed .result-item__badge {
+  background: var(--danger);
+  color: #fff;
+}
+
+.result-item__body {
+  min-width: 0;
+}
+
+.result-item__raw {
+  margin: 0;
+  font-size: 0.92rem;
+  /* 긴 주소가 잘리지 않고 접힌다. 자르면 어느 줄이 실패했는지 알 수 없다. */
+  overflow-wrap: anywhere;
+}
+
+.result-item__select {
+  /* 버튼이지만 글처럼 보인다. 목록의 리듬을 깨지 않으면서 누를 수 있다.
+     터치 영역은 글 한 줄이 아니라 항목 전체다 — 지도로 옮겨 가는 가장 잦은 동작이다. */
+  display: block;
+  width: 100%;
+  padding: 0.35rem 0;
+  margin: -0.35rem 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.92rem;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.result-item__select:hover {
+  color: var(--accent);
+}
+
+.result-item__select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 0.2rem;
+}
+
+.result-item__detail {
+  margin: 0.1rem 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.result-item__tag {
+  margin-left: 0.35rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.72rem;
+}
+
+.result-item__status {
+  display: inline-block;
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+
+.result-item--notFound .result-item__status,
+.result-item--failed .result-item__status {
+  color: var(--danger);
+}
+
+.result-item--skipped .result-item__status {
+  color: var(--warn);
+}
+
+.result-item__actions {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   지도
+   ────────────────────────────────────────────────────────────────────────── */
+.map-view {
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
 }
 
 .map-placeholder {
-  margin-top: 1.5rem;
-  padding: 1.25rem;
-  border: 1px dashed currentColor;
-  border-radius: 0.5rem;
-  opacity: 0.85;
+  display: grid;
+  align-content: center;
+  height: 100%;
+  box-sizing: border-box;
+  /* 시트가 아래를 덮으므로 안내가 그 뒤로 숨지 않게 띄운다. */
+  padding: calc(var(--safe-top) + 4rem) 1.25rem calc(var(--sheet-peek) + 1.25rem);
+  color: var(--ink-muted);
+  text-align: center;
 }
 
 .map-placeholder p {
@@ -55,297 +727,34 @@ body {
   margin-bottom: 0;
 }
 
-/* ── 레이아웃 ─────────────────────────────────────────────────────────────── */
-/* 넓은 화면은 좌 패널 + 우 지도, 좁은 화면은 한 줄로 쌓인다. 400px 에서 가로
-   스크롤이 생기지 않아야 하므로 어디에도 고정 최소 폭을 두지 않는다. */
-.app__body {
-  display: grid;
-  gap: 1.5rem;
-  margin-top: 1.5rem;
+.map-placeholder strong {
+  color: var(--ink);
 }
 
 @media (min-width: 52rem) {
-  .app {
-    max-width: 75rem;
-  }
-
-  .app__body {
-    grid-template-columns: 25rem minmax(0, 1fr);
-    align-items: start;
-  }
-}
-
-.app__panel {
-  display: grid;
-  gap: 1rem;
-  min-width: 0;
-}
-
-.app__map {
-  min-width: 0;
-}
-
-.app__map-note {
-  margin: 0.75rem 0 0;
-  font-size: 0.875rem;
-  opacity: 0.75;
-}
-
-/* ── 버튼 ─────────────────────────────────────────────────────────────────── */
-.button {
-  /* 손가락으로 누를 수 있어야 한다. */
-  min-height: 2.75rem;
-  padding: 0 0.9rem;
-  border: 1px solid currentColor;
-  border-radius: 0.375rem;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
-.button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.button:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 2px;
-}
-
-.button--primary {
-  border-color: #1d4ed8;
-  background: #1d4ed8;
-  color: #fff;
-}
-
-.button--primary:disabled {
-  /* 배경을 지우고 테두리만 남긴다. 파란 덩어리가 회색으로만 바뀌면 눌러도 되는 줄 안다. */
-  background: transparent;
-  border-color: currentColor;
-  color: inherit;
-}
-
-.button--danger:not(:disabled) {
-  color: #b91c1c;
-}
-
-.button--small {
-  /* 글자만 작다. 높이는 44px 을 지킨다 — 실패 항목의 버튼이야말로 모바일에서
-     가장 자주 눌리는 대상이다. */
-  padding: 0 0.6rem;
-  font-size: 0.875rem;
-}
-
-/* ── 입력 ─────────────────────────────────────────────────────────────────── */
-.address-input__label {
-  display: block;
-  font-weight: 600;
-}
-
-.address-input__hint {
-  margin: 0.25rem 0 0.5rem;
-  font-size: 0.875rem;
-  opacity: 0.75;
-}
-
-.address-input__field {
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0.6rem;
-  border: 1px solid currentColor;
-  border-radius: 0.375rem;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  resize: vertical;
-}
-
-.address-input__count {
-  margin: 0.4rem 0 0.6rem;
-  font-size: 0.875rem;
-  opacity: 0.75;
-}
-
-.address-input__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-/* ── 진행 표시 ────────────────────────────────────────────────────────────── */
-.progress__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.progress__text {
-  margin: 0;
-}
-
-.progress__track {
-  margin-top: 0.5rem;
-  height: 0.5rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, currentColor 18%, transparent);
-  overflow: hidden;
-}
-
-.progress__fill {
-  height: 100%;
-  background: currentColor;
-  transition: width 120ms linear;
-}
-
-/* ── 결과 목록 ────────────────────────────────────────────────────────────── */
-.result-list__empty {
-  margin: 0;
-  opacity: 0.75;
-}
-
-.result-list__summary {
-  display: flex;
-  gap: 0.5rem;
-  margin: 0 0 0.75rem;
-}
-
-.chip {
-  padding: 0.15rem 0.6rem;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  font-size: 0.875rem;
-}
-
-.chip--failed {
-  color: #b91c1c;
-}
-
-.result-list__items {
-  display: grid;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.result-item {
-  display: grid;
-  grid-template-columns: 2rem minmax(0, 1fr);
-  gap: 0.6rem;
-  padding: 0.6rem;
-  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
-  border-radius: 0.375rem;
-}
-
-.result-item--notFound,
-.result-item--failed {
-  border-color: #b91c1c;
-}
-
-.result-item--skipped {
-  opacity: 0.6;
-}
-
-.result-item__badge {
-  display: grid;
-  place-items: center;
-  height: 1.75rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, currentColor 12%, transparent);
-  font-variant-numeric: tabular-nums;
-}
-
-.result-item__body {
-  min-width: 0;
-}
-
-.result-item__raw {
-  margin: 0;
-  /* 긴 주소가 잘리지 않고 접힌다. 자르면 어느 줄이 실패했는지 알 수 없다. */
-  overflow-wrap: anywhere;
-}
-
-.result-item__select {
-  /* 버튼이지만 글처럼 보인다. 목록의 리듬을 깨지 않으면서 누를 수 있다. */
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.result-item__select:hover {
-  text-decoration: underline;
-}
-
-.app__notice {
-  margin: 0.5rem 0 0;
-  font-size: 0.875rem;
-  color: #1f2937;
-}
-
-.result-item__detail {
-  margin: 0.15rem 0 0;
-  font-size: 0.875rem;
-  opacity: 0.8;
-  overflow-wrap: anywhere;
-}
-
-.result-item__tag {
-  margin-left: 0.4rem;
-  padding: 0 0.4rem;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  font-size: 0.75rem;
-}
-
-.result-item__status {
-  display: inline-block;
-  margin-top: 0.2rem;
-  font-size: 0.75rem;
-  opacity: 0.7;
-}
-
-.result-item__actions {
-  grid-column: 2;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 0.4rem;
-}
-
-/* ── 지도 ─────────────────────────────────────────────────────────────────── */
-.map-view {
-  width: 100%;
-  /* 화면 높이에 따라간다. 모바일에서 지도가 한 줄짜리 띠가 되면 쓸모가 없다. */
-  height: min(32rem, 60vh);
-  border-radius: 0.5rem;
-  background: color-mix(in srgb, currentColor 8%, transparent);
-}
-
-@media (min-width: 52rem) {
-  .map-view {
-    height: min(40rem, 75vh);
+  .map-placeholder {
+    padding: 1.25rem;
   }
 }
 
 .marker {
   display: grid;
   place-items: center;
-  min-width: 1.75rem;
-  height: 1.75rem;
-  padding: 0 0.35rem;
+  /* 32px. 손가락으로 누를 수 있어야 목록으로 되돌아오는 길이 생긴다. */
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.4rem;
+  border: 2px solid var(--surface);
   border-radius: 999px;
-  background: #1d4ed8;
-  color: #fff;
-  font: 600 0.875rem/1 system-ui, sans-serif;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 600 0.85rem/1 system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(17, 24, 38, 0.35);
+}
+
+.marker--focused {
+  /* 고른 마커는 커지는 대신 테를 두른다. 크기가 변하면 위치가 변한 것처럼 보인다. */
+  box-shadow: 0 0 0 3px var(--accent-soft), 0 2px 6px rgba(17, 24, 38, 0.35);
 }
