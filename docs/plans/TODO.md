@@ -20,24 +20,24 @@
 | 5 | `.env.example`(이름만) · `.gitignore` · 키 없을 때 안내 문구 | 에이전트 | M1 | 5 (병렬) | 1 | — |
 | 6 | `ci.yml` · `deploy.yml` 작성 | 에이전트 | M1 | 5 (병렬) | 1 | — |
 | 7 | **HOLD-1** 저장소 Settings → Pages → Source = GitHub Actions | **사람** | M1 | 6 (직렬) | 6 | — |
-| 8 | **HOLD-3** M1 PR 리뷰·머지 + 배포 주소 열리는지 확인 | **사람** | M1 | 7 (직렬) | 4,5,7 | git-commit-workflow |
+| 8 | ~~M1 PR 리뷰·머지 + 배포 주소 확인~~ → 완료 (2026-09-16) | **사람** | M1 | 7 (직렬) | 4,5,7 | git-commit-workflow |
 | 9 | `domain/types.ts` — Entry · EntryStatus | 에이전트 | M2 | 8 (직렬) | 8 | — |
 | 10 | 파싱 스펙 → 테스트 → `parse-addresses.ts` | 에이전트 | M2 | 9 (병렬) | 9 | tdd-gate-workflow |
 | 11 | 큐 스펙 → 테스트 → `geocode-queue.ts` (동시 3 · 중단 · 쿼터 전체중단) | 에이전트 | M2 | 9 (병렬) | 9 | tdd-gate-workflow |
 | 12 | `domain/` 경계 검사 (바깥 import 금지) | 에이전트 | M2 | 10 (직렬) | 10,11 | — |
-| 13 | **HOLD-3** M2 PR 리뷰·머지 | **사람** | M2 | 11 (직렬) | 12 | git-commit-workflow |
+| 13 | ~~M2 PR 리뷰·머지~~ → 완료 (2026-09-16) | **사람** | M2 | 11 (직렬) | 12 | git-commit-workflow |
 | 14 | **HOLD-4** Kakao SDK 공식 문서로 시그니처 대조 (`x`=경도 여부 포함) | **사람** | M3 | 12 (직렬) | 13 | external-library-usage |
 | 15 | ~~대조 결과를 `docs/findings/kakao-sdk.md` 에 기록~~ → 완료 | 에이전트 | M3 | 13 (직렬) | 14 | dev-findings |
 | 16 | ~~`geocoding/port.ts`~~ → 완료. 계약은 `domain/types.ts` 에 있고 여기서 re-export 한다 | 에이전트 | M3 | 14 (직렬) | 15 | architecture-design |
 | 17 | ~~`fake-adapter.ts` + 계약 테스트~~ → 완료. 계약 테스트는 두 구현에 함께 돈다 | 에이전트 | M3 | 15 (직렬) | 16 | tdd-gate-workflow |
 | 18 | ~~`kakao-adapter.ts` (addressSearch → keywordSearch 폴백)~~ → 완료 | 에이전트 | M3 | 16 (직렬) | 17 | external-library-usage |
-| 19 | **HOLD-3** M3 PR 리뷰·머지 | **사람** | M3 | 17 (직렬) | 18 | git-commit-workflow |
+| 19 | \1 PR 리뷰·머지 — Fable 에이전트 리뷰 → 승인 시 Claude 머지 | 에이전트 | M3 | 17 (직렬) | 18 | git-commit-workflow |
 | 20 | ~~`state/store.ts` — 순서 불변식 테스트 포함~~ → 완료 | 에이전트 | M4 | 18 (직렬) | 19 | tdd-gate-workflow |
 | 21 | ~~`AddressInput.tsx`~~ → 완료 | 에이전트 | M4 | 19 (병렬) | 20 | design-system |
 | 22 | ~~`ResultList.tsx` · `ResultItem.tsx` (실패 항목 자리 보존)~~ → 완료 | 에이전트 | M4 | 19 (병렬) | 20 | design-system |
 | 23 | ~~진행 표시 · 중단 버튼~~ → 완료 (`ProgressBar.tsx`) | 에이전트 | M4 | 19 (병렬) | 20 | — |
 | 24 | ~~`App.tsx` 조립 (가짜 어댑터 주입) · 반응형 · 접근성~~ → 완료 | 에이전트 | M4 | 20 (직렬) | 21,22,23 | design-system |
-| 25 | **HOLD-3** M4 PR 리뷰·머지 | **사람** | M4 | 21 (직렬) | 24 | git-commit-workflow |
+| 25 | \1 PR 리뷰·머지 — Fable 에이전트 리뷰 → 승인 시 Claude 머지 | 에이전트 | M4 | 21 (직렬) | 24 | git-commit-workflow |
 | 26 | **HOLD-5** Kakao 앱 생성 + 무료 쿼터가 다른 앱에 붙어있는지 확인 | **사람** | M5 | 22 (직렬) | 25 | — |
 | 27 | **HOLD-6** JavaScript 앱키 발급 → Secrets `KAKAO_JS_KEY` 등록 | **사람** | M5 | 23 (직렬) | 26 | — |
 | 28 | **HOLD-7** 콘솔에 도메인 2개 등록 (로컬, `https://doosies.github.io`) | **사람** | M5 | 24 (직렬) | 26 | — |
@@ -46,17 +46,17 @@
 | 31 | `MapView.tsx` + 마커 관리 | 에이전트 | M5 | 27 (직렬) | 30 | — |
 | 32 | `use-fit-bounds.ts` (마커 1개 예외 포함) | 에이전트 | M5 | 28 (직렬) | 31 | tdd-gate-workflow |
 | 33 | 어댑터를 Kakao 로 교체 | 에이전트 | M5 | 29 (직렬) | 32 | — |
-| 34 | **HOLD-3** M5 PR 리뷰·머지 + 배포 주소에서 지도 확인 | **사람** | M5 | 30 (직렬) | 33 | git-commit-workflow |
+| 34 | M5 PR 리뷰·머지 — Fable 리뷰 → 승인 시 Claude 머지. **배포 주소에서 지도 확인은 사람** | 에이전트 + 사람 | M5 | 30 (직렬) | 33 | git-commit-workflow |
 | 35 | `url-state.ts` — 해시 인코딩·복원·자동 재조회 | 에이전트 | M6 | 31 (병렬) | 25 | tdd-gate-workflow |
 | 36 | `to-csv.ts` — 이스케이프 · BOM · 실패 항목 포함 | 에이전트 | M6 | 31 (병렬) | 25 | tdd-gate-workflow |
 | 37 | `download.ts` + 파일명에 날짜 | 에이전트 | M6 | 32 (직렬) | 35,36 | — |
-| 38 | **HOLD-3** M6 PR 리뷰·머지 | **사람** | M6 | 33 (직렬) | 37 | git-commit-workflow |
+| 38 | \1 PR 리뷰·머지 — Fable 에이전트 리뷰 → 승인 시 Claude 머지 | 에이전트 | M6 | 33 (직렬) | 37 | git-commit-workflow |
 | 39 | `kakao-sdk-stub.ts` — SDK 라우트 가로채기 | 에이전트 | M7 | 34 (직렬) | 34,38 | journey-testing |
 | 40 | 저니 스펙 → `paste-and-plot.spec.ts` (7개 시나리오) | 에이전트 | M7 | 35 (직렬) | 39 | journey-testing |
 | 41 | `live-kakao.spec.ts` — `@live` 태그, 키 없으면 실패 | 에이전트 | M7 | 36 (직렬) | 39 | journey-testing |
 | 42 | CI 에 저니 추가 · 실연동은 `workflow_dispatch` | 에이전트 | M7 | 37 (직렬) | 40,41 | — |
 | 43 | **HOLD-9** 실연동 수동 실행 + 배포 사이트 육안 검증 | **사람** | M7 | 38 (직렬) | 42 | — |
-| 44 | **HOLD-3** M7 PR 리뷰·머지 | **사람** | M7 | 39 (직렬) | 43 | git-commit-workflow |
+| 44 | \1 PR 리뷰·머지 — Fable 에이전트 리뷰 → 승인 시 Claude 머지 | 에이전트 | M7 | 39 (직렬) | 43 | git-commit-workflow |
 
 ## 사람이 할 일만 모아 보기
 

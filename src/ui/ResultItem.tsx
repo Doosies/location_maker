@@ -6,6 +6,8 @@ export type ResultItemProps = {
   index: number;
   onRetry: (entry: Entry) => void;
   onSkip: (entry: Entry) => void;
+  /** 조회 중에는 잠근다. `고쳐서 다시` 가 잠긴 입력창에 줄을 붙일 수 있어서다. */
+  disabled?: boolean;
 };
 
 const STATUS_LABEL: Record<Entry['status'], string> = {
@@ -17,7 +19,7 @@ const STATUS_LABEL: Record<Entry['status'], string> = {
   skipped: '건너뜀',
 };
 
-export function ResultItem({ entry, index, onRetry, onSkip }: ResultItemProps) {
+export function ResultItem({ entry, index, onRetry, onSkip, disabled = false }: ResultItemProps) {
   // 건너뛴 줄은 자리와 원문을 그대로 두되 더 권하지 않는다. 사용자가 이미 결정했다.
   const failed = entry.status === 'notFound' || entry.status === 'failed';
   const marked = failed || entry.status === 'skipped';
@@ -41,10 +43,10 @@ export function ResultItem({ entry, index, onRetry, onSkip }: ResultItemProps) {
       </div>
       {failed && (
         <div className="result-item__actions">
-          <button type="button" className="button button--small" onClick={() => onRetry(entry)}>
+          <button type="button" className="button button--small" disabled={disabled} onClick={() => onRetry(entry)}>
             고쳐서 다시
           </button>
-          <button type="button" className="button button--small" onClick={() => onSkip(entry)}>
+          <button type="button" className="button button--small" disabled={disabled} onClick={() => onSkip(entry)}>
             건너뛰기
           </button>
         </div>

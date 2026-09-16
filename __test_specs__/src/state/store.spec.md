@@ -60,10 +60,11 @@ target: src/state/__tests__/store.test.ts
 - **When** `reset` 을 부르면
 - **Then** `entries` 가 비고 `running` 이 false 다
 
-### UC-LM-STORE-008 countByStatus 는 못 찾음과 오류를 함께 센다
+### UC-LM-STORE-008 countByStatus 는 못 찾음·오류·건너뜀을 함께 센다
 
-- **Given** `found` · `notFound` · `failed` · `loading` 이 하나씩 있고
+- **Given** `found` · `notFound` · `failed` · `skipped` · `loading` 이 하나씩 있고
 - **When** `countByStatus` 를 부르면
-- **Then** 찾음 1, 실패 2, 끝난 것 3, 전체 4 다
+- **Then** 찾음 1, 실패 3, 끝난 것 4, 전체 5 다
 
-사용자에게는 "못 찾음" 과 "오류" 가 똑같이 안 된 것이다. 요약 칩에서는 한 숫자로 센다.
+사용자에게는 "못 찾음" 과 "오류" 와 "건너뜀" 이 똑같이 안 된 줄이다. 요약 칩에서는 한
+숫자로 센다. 건너뛴 줄을 빼면 `찾음 + 실패` 가 전체와 맞지 않아 숫자가 이상해진다.

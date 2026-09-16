@@ -1,7 +1,7 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { runGeocodeQueue } from './domain/geocode-queue';
-import { parseAddresses } from './domain/parse-addresses';
+import { normalizeLine, parseAddresses } from './domain/parse-addresses';
 import type { Entry, GeocodePort } from './domain/types';
 import { countByStatus, store as defaultStore, useStore, type Store } from './state/store';
 import { createFakeGeocoder } from './geocoding/fake-adapter';
@@ -23,6 +23,8 @@ export function App({ port, store = defaultStore }: AppProps) {
   const [text, setText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  /** `고쳐서 다시` 가 고르라고 표시해 둔 원문. 렌더 뒤에 그 줄을 선택한다. */
+  const pendingSelection = useRef<string | null>(null);
   // 가짜 어댑터를 매 렌더마다 새로 만들면 조회 중에 표가 갈아 끼워진다.
   const fallbackPort = useRef<GeocodePort | undefined>(undefined);
   const activePort = port ?? (fallbackPort.current ??= createFakeGeocoder({ delayMs: 120 }));
@@ -57,17 +59,41 @@ export function App({ port, store = defaultStore }: AppProps) {
   }, []);
 
   /**
-   * 실패한 줄의 원문을 입력창으로 되돌린다. 입력창을 통째로 덮어쓰지 않고, 그 줄이
-   * 이미 있으면 그대로 두고 없으면 붙인다 — 조회 뒤에 입력을 지운 경우까지 받는다.
+   * 실패한 줄의 원문을 입력창으로 되돌린다.
+   *
+   * 입력창을 통째로 덮어쓰지 않는다 — 그러면 나머지 줄이 사라진다. 그 줄이 이미
+   * 있으면 **그 줄을 선택해 보여 주고**, 없으면 끝에 붙인 뒤 선택한다. 포커스만
+   * 옮기면 줄이 서른 개일 때 어느 줄을 고쳐야 하는지 알 수 없다.
+   *
+   * 비교는 파서와 **같은 규칙**으로 한다. `line.trim()` 으로 비교하면 입력창의
+   * `1. 서울…` 과 항목의 `서울…` 이 달라 보여 같은 주소가 한 줄 더 붙는다.
    */
   const retry = useCallback((entry: Entry) => {
     setText((current) => {
       const lines = current.split(/\r?\n/);
-      const next = lines.some((line) => line.trim() === entry.raw) ? current : [...lines, entry.raw].join('\n').trimStart();
+      const found = lines.findIndex((line) => normalizeLine(line) === entry.raw);
+      const next = found === -1 ? [...lines, entry.raw].join('\n').replace(/^\n+/, '') : current;
+      // setState 안에서 DOM 을 만지지 않는다. 다음 줄의 선택은 상태가 반영된 뒤에 한다.
+      pendingSelection.current = entry.raw;
       return next;
     });
-    textareaRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    const target = pendingSelection.current;
+    const field = textareaRef.current;
+    if (target === null || field === null) return;
+    pendingSelection.current = null;
+
+    const lines = field.value.split('\n');
+    const index = lines.findIndex((line) => normalizeLine(line) === target);
+    field.focus();
+    if (index === -1) return;
+
+    // 줄 시작 오프셋 = 앞 줄들의 길이 합 + 줄바꿈 수
+    const start = lines.slice(0, index).reduce((sum, line) => sum + line.length + 1, 0);
+    field.setSelectionRange(start, start + (lines[index]?.length ?? 0));
+  });
 
   const skip = useCallback(
     (entry: Entry) => {
@@ -94,7 +120,7 @@ export function App({ port, store = defaultStore }: AppProps) {
             textareaRef={textareaRef}
           />
           {running && <ProgressBar done={done} total={total} onAbort={abort} />}
-          <ResultList entries={entries} onRetry={retry} onSkip={skip} />
+          <ResultList entries={entries} onRetry={retry} onSkip={skip} running={running} />
         </div>
         <div className="app__map">
           <MapPlaceholder />

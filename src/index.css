@@ -117,7 +117,8 @@ body {
 }
 
 .button--small {
-  min-height: 2.25rem;
+  /* 글자만 작다. 높이는 44px 을 지킨다 — 실패 항목의 버튼이야말로 모바일에서
+     가장 자주 눌리는 대상이다. */
   padding: 0 0.6rem;
   font-size: 0.875rem;
 }
