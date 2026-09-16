@@ -145,7 +145,7 @@ describe('Kakao 어댑터', () => {
 
     expect(result).toEqual({
       ok: false,
-      failure: { reason: 'zero_result', message: '검색 결과가 없다' },
+      failure: { reason: 'zero_result', message: '검색 결과가 없습니다' },
     });
   });
 

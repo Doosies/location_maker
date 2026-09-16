@@ -20,7 +20,7 @@ const FOUND = entry('a', '서울 강남구 테헤란로 152', {
 
 const NOT_FOUND = entry('b', '있을 리 없는 주소', {
   status: 'notFound',
-  failure: { reason: 'zero_result', message: '검색 결과가 없다' },
+  failure: { reason: 'zero_result', message: '검색 결과가 없습니다' },
 });
 
 function rows(csv: string): string[] {

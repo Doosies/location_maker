@@ -210,7 +210,7 @@ export function App({
     const encoded = encodeAddresses(parseAddresses(text).map((entry) => entry.raw));
     if (!encoded.ok) {
       // 이 순간 목록이 비어 있으면 CSV 버튼은 아직 잠겨 있다. 순서를 같이 알려 준다.
-      setShareNote('주소가 너무 많아 링크에 담을 수 없다. 지도에 표시한 뒤 CSV 로 내려받는 편이 낫다.');
+      setShareNote('주소가 너무 많아 링크에 담을 수 없습니다. 지도에 표시한 뒤 CSV 로 내려받아 주세요.');
       return;
     }
 
@@ -223,7 +223,7 @@ export function App({
     }
 
     void writeText(`${base}${encoded.hash}`).then(
-      () => setShareNote('링크를 복사했다.'),
+      () => setShareNote('링크를 복사했습니다.'),
       () => setShareNote(`${base}${encoded.hash}`),
     );
   }, [clipboard, text]);
@@ -244,7 +244,7 @@ export function App({
       <header className="app__header">
         <div>
           <h1>location maker</h1>
-          <p>주소를 여러 줄 붙여넣으면 지도에 표시한다.</p>
+          <p>주소를 여러 줄 붙여넣으면 지도에 표시합니다.</p>
         </div>
         <div className="app__actions">
           <button type="button" className="button button--small" onClick={saveCsv} disabled={entries.length === 0 || running}>
@@ -271,8 +271,8 @@ export function App({
           {waitingForSdk && (
             <p className="app__notice" aria-live="polite">
               {sdkFailure === null
-                ? '지도를 불러오는 중이다. 준비되면 조회할 수 있다.'
-                : '지도를 불러오지 못해 조회를 멈춰 뒀다. 오른쪽 안내를 확인한다.'}
+                ? '지도를 불러오는 중입니다. 준비되면 조회할 수 있습니다.'
+                : '지도를 불러오지 못해 조회를 멈춰 뒀습니다. 오른쪽 안내를 확인해 주세요.'}
             </p>
           )}
           {shareNote !== null && (
@@ -289,7 +289,7 @@ export function App({
               "마커가 찍혔다" 고 하면 화면이 서로 다른 말을 한다. */}
           {kakaoPort !== null && !running && entries.length > 0 && (
             <p className="app__map-note" aria-live="polite">
-              찾은 {found}곳에 번호 마커가 찍혔다. 실패 {failed}곳은 목록에만 남는다.
+              찾은 {found}곳에 번호 마커를 찍었습니다. 실패 {failed}곳은 목록에만 남습니다.
             </p>
           )}
         </div>

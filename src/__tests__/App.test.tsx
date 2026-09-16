@@ -25,7 +25,7 @@ function port(overrides: (query: string) => GeocodeResult | undefined = () => un
           place: { lat: 37.5, lng: 127.03, label: '서울 강남구 역삼동 737', matchedBy: 'address' },
         };
       }
-      return { ok: false, failure: { reason: 'zero_result', message: '검색 결과가 없다' } };
+      return { ok: false, failure: { reason: 'zero_result', message: '검색 결과가 없습니다' } };
     },
   };
 }
@@ -133,7 +133,7 @@ describe('앱 조립', () => {
             signal?.addEventListener('abort', () => resolve(), { once: true });
           });
         }
-        return { ok: false, failure: { reason: 'zero_result', message: '검색 결과가 없다' } };
+        return { ok: false, failure: { reason: 'zero_result', message: '검색 결과가 없습니다' } };
       },
     };
     render(<App port={slow} store={createStore()} />);
@@ -168,7 +168,7 @@ describe('앱 조립', () => {
 
     // 링크는 손으로 잘리고 붙는 물건이다. 던지면 사용자가 고칠 수 없는 고장이 된다.
     expect(screen.getByLabelText('주소 입력')).toHaveValue('');
-    expect(screen.getByText(/아직 표시할 주소가 없다/)).toBeInTheDocument();
+    expect(screen.getByText(/아직 표시할 주소가 없습니다/)).toBeInTheDocument();
   });
 
   it('UC-LM-APP-010: 링크 복사는 입력창의 주소를 담은 주소를 클립보드에 넣는다', async () => {

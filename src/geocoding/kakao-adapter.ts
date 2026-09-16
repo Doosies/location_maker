@@ -109,7 +109,7 @@ function sdkFailure(message: string): GeocodeResult {
 }
 
 function zeroResult(): GeocodeResult {
-  return { ok: false, failure: { reason: 'zero_result', message: '검색 결과가 없다' } };
+  return { ok: false, failure: { reason: 'zero_result', message: '검색 결과가 없습니다' } };
 }
 
 // ── 어댑터 ──────────────────────────────────────────────────────────────────
@@ -171,7 +171,7 @@ export function createKakaoGeocoder(services: KakaoServices): GeocodePort {
       try {
         address = await call<KakaoAddressItem>((cb) => geocoder.addressSearch(query, cb), signal);
       } catch (error) {
-        return sdkFailure(error instanceof Error ? error.message : '주소 검색에 실패했다');
+        return sdkFailure(error instanceof Error ? error.message : '주소 검색에 실패했습니다');
       }
 
       if (address.aborted) return abortedResult();
@@ -183,7 +183,7 @@ export function createKakaoGeocoder(services: KakaoServices): GeocodePort {
         if (place !== null) return { ok: true, place };
         // OK 인데 쓸 수 있는 항목이 없다. 키워드 검색으로 한 번 더 가 본다.
       } else if (address.status === Status.ERROR) {
-        return sdkFailure('주소 검색 중 오류가 났다');
+        return sdkFailure('주소 검색 중 오류가 났습니다');
       }
 
       // 두 번째 조회를 **시작하기 전에** 중단을 본다. 첫 조회가 빈손으로 끝난 뒤라
@@ -195,13 +195,13 @@ export function createKakaoGeocoder(services: KakaoServices): GeocodePort {
       try {
         keyword = await call<KakaoPlaceItem>((cb) => places.keywordSearch(query, cb), signal);
       } catch (error) {
-        return sdkFailure(error instanceof Error ? error.message : '키워드 검색에 실패했다');
+        return sdkFailure(error instanceof Error ? error.message : '키워드 검색에 실패했습니다');
       }
 
       if (keyword.aborted) return abortedResult();
 
       if (keyword.status === Status.ERROR) {
-        return sdkFailure('키워드 검색 중 오류가 났다');
+        return sdkFailure('키워드 검색 중 오류가 났습니다');
       }
       if (keyword.status !== Status.OK) return zeroResult();
 

@@ -16,7 +16,7 @@ export function ResultList({ entries, onRetry, onSkip, onSelect, running = false
   if (entries.length === 0) {
     return (
       <section className="result-list" aria-label="결과 목록">
-        <p className="result-list__empty">아직 표시할 주소가 없다. 위에 주소를 넣고 눌러 보자.</p>
+        <p className="result-list__empty">아직 표시할 주소가 없습니다. 위에 주소를 넣고 눌러 보세요.</p>
       </section>
     );
   }

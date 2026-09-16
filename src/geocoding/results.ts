@@ -11,11 +11,11 @@ import type { GeocodeResult } from './port';
 export function abortedResult(): GeocodeResult {
   // `reason` 에 'aborted' 는 없다. 큐가 중단 중의 실패를 `pending` 으로 되돌리므로
   // 사용자에게 이 메시지가 보일 일은 없지만, 남는다면 재시도하라는 뜻이 맞다.
-  return { ok: false, failure: { reason: 'network', message: '조회를 멈췄다' } };
+  return { ok: false, failure: { reason: 'network', message: '조회를 멈췄습니다' } };
 }
 
 export function emptyQueryResult(): GeocodeResult {
-  return { ok: false, failure: { reason: 'zero_result', message: '주소가 비어 있다' } };
+  return { ok: false, failure: { reason: 'zero_result', message: '주소가 비어 있습니다' } };
 }
 
 /**

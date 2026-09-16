@@ -16,7 +16,7 @@ const MIXED: Entry[] = [
   }),
   entry('b', '있을 리 없는 주소', {
     status: 'notFound',
-    failure: { reason: 'zero_result', message: '검색 결과가 없다' },
+    failure: { reason: 'zero_result', message: '검색 결과가 없습니다' },
   }),
   entry('c', '서울 중구 을지로 65', {
     status: 'found',
@@ -35,7 +35,7 @@ describe('결과 목록', () => {
   it('UC-LM-LIST-001: 비어 있으면 안내 문구를 띄운다', () => {
     render리스트([]);
 
-    expect(screen.getByText(/아직 표시할 주소가 없다/)).toBeInTheDocument();
+    expect(screen.getByText(/아직 표시할 주소가 없습니다/)).toBeInTheDocument();
   });
 
   it('UC-LM-LIST-002: 실패 항목이 원래 자리에 원문 그대로 남는다', () => {

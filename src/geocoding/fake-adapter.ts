@@ -59,9 +59,9 @@ function toKey(query: string): string {
 
 function failure(reason: 'network' | 'quota' | 'sdk'): GeocodeResult {
   const messages = {
-    network: '네트워크가 끊겼다',
-    quota: '오늘 조회 한도를 다 썼다',
-    sdk: '지도 SDK 가 응답하지 않는다',
+    network: '네트워크가 끊겼습니다',
+    quota: '오늘 조회 한도를 다 썼습니다',
+    sdk: '지도 SDK 가 응답하지 않습니다',
   } as const;
   return { ok: false, failure: { reason, message: messages[reason] } };
 }
@@ -103,7 +103,7 @@ export function createFakeGeocoder(options: FakeGeocoderOptions = {}): GeocodePo
       if (row === undefined) {
         return {
           ok: false,
-          failure: { reason: 'zero_result', message: '검색 결과가 없다' },
+          failure: { reason: 'zero_result', message: '검색 결과가 없습니다' },
         };
       }
 
