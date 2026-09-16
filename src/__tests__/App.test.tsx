@@ -201,4 +201,18 @@ describe('앱 조립', () => {
     expect(content).toContain('있을 리 없는 주소');
     expect(fileName).toMatch(/^location-maker-\d{4}-\d{2}-\d{2}\.csv$/);
   });
+  it('UC-LM-APP-012: 조회를 시작하면 시트가 절반으로 내려가 지도가 보인다', async () => {
+    const { container } = render(<App port={port()} store={createStore()} />);
+
+    // 첫 화면은 입력창이 다 보이는 `full` 이다. 아직 아무것도 없는 지도보다 입력이 먼저다.
+    expect(container.querySelector('.sheet')).toHaveAttribute('data-snap', 'full');
+
+    await userEvent.type(screen.getByLabelText('주소 입력'), TWO_LINES);
+    await userEvent.click(screen.getByRole('button', { name: '지도에 표시' }));
+
+    // 마커가 하나씩 찍히는 것을 봐야 한다. 시트가 화면을 다 덮고 있으면 못 본다.
+    await waitFor(() => {
+      expect(container.querySelector('.sheet')).toHaveAttribute('data-snap', 'half');
+    });
+  });
 });

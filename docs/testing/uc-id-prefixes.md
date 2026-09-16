@@ -23,6 +23,7 @@
 | `LM-INPUT` | `src/ui/__tests__/AddressInput.test.tsx` | 주소 입력 — 줄 수·버튼 상태 |
 | `LM-LIST` | `src/ui/__tests__/ResultList.test.tsx` | 결과 목록 — 실패 항목 자리 보존 |
 | `LM-PROGRESS` | `src/ui/__tests__/ProgressBar.test.tsx` | 진행 표시와 중단 |
+| `LM-SHEET` | `src/ui/__tests__/BottomSheet.test.tsx` | 바텀 시트 — 자리 전환과 드래그 |
 | `LM-APP` | `src/__tests__/App.test.tsx` | 파싱→큐→스토어→화면 연결 |
 | `LM-BOUNDS` | `src/map/__tests__/use-fit-bounds.test.ts` | 지도 범위 계산 (마커 1개 예외) |
 | `LM-SDK` | `src/map/__tests__/load-kakao-sdk.test.ts` | SDK 로더 — 실패 원인 구분 |
@@ -31,6 +32,7 @@
 | `LM-URL` | `src/share/__tests__/url-state.test.ts` | 링크에 담는 주소 목록 |
 | `LM-CSV` | `src/share/__tests__/to-csv.test.ts` | CSV 내보내기 — 이스케이프·BOM |
 | `LME-PLOT` | `e2e/__tests__/paste-and-plot.test.ts` | 저니 — 붙여넣기부터 CSV 까지 (SDK 스텁) |
+| `LME-MOBILE` | `e2e/__tests__/mobile-layout.test.ts` | 좁은 화면 — 지도가 첫 화면에 보이는지 |
 | `LME-NOKEY` | `e2e/__tests__/no-key.test.ts` | 키 없이 빌드된 화면 |
 | `LME-LIVE` | `e2e/__tests__/live-kakao.test.ts` | 진짜 SDK 실연동 (수동 실행) |
 

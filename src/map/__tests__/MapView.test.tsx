@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { Entry } from '../../domain/types';
 import type { KakaoBounds, KakaoLatLng, KakaoMap, KakaoMapsNamespace, KakaoOverlay } from '../kakao-maps';
@@ -8,10 +8,19 @@ import { MapView } from '../MapView';
 /** 가짜 SDK. 지도를 실제로 그리지 않고 무엇을 시켰는지만 기록한다. */
 function stubSdk() {
   const calls = {
-    overlays: [] as { content: string; lat: number; lng: number; onMap: boolean }[],
+    // `content` 는 HTML 문자열로 적는다. 오버레이는 이제 요소를 받지만, 테스트가
+    // 보고 싶은 것은 "무엇이 그려졌나" 이고 그것은 바깥 HTML 로 다 드러난다.
+    overlays: [] as {
+      content: string;
+      element: HTMLElement | null;
+      lat: number;
+      lng: number;
+      onMap: boolean;
+    }[],
     center: [] as [number, number][],
     level: [] as number[],
     bounds: [] as [number, number][][],
+    bounds_padding: [] as number[][],
     panTo: [] as [number, number][],
   };
 
@@ -40,7 +49,9 @@ function stubSdk() {
       }
     },
     Map: class implements KakaoMap {
-      setBounds(): void {}
+      setBounds(_bounds: KakaoBounds, ...padding: (number | undefined)[]): void {
+        calls.bounds_padding.push(padding.map((value) => value ?? 0));
+      }
       setCenter(latlng: KakaoLatLng): void {
         calls.center.push([latlng.getLat(), latlng.getLng()]);
       }
@@ -52,14 +63,22 @@ function stubSdk() {
       }
     },
     CustomOverlay: class implements KakaoOverlay {
-      private readonly record: { content: string; lat: number; lng: number; onMap: boolean };
-      constructor(options: { position: KakaoLatLng; content: string }) {
+      private readonly record: {
+        content: string;
+        element: HTMLElement | null;
+        lat: number;
+        lng: number;
+        onMap: boolean;
+      };
+      constructor(options: { position: KakaoLatLng; content: string | HTMLElement }) {
         this.record = {
-          content: options.content,
+          content: '',
+          element: null,
           lat: options.position.getLat(),
           lng: options.position.getLng(),
           onMap: false,
         };
+        this.setContent(options.content);
         calls.overlays.push(this.record);
       }
       setMap(map: KakaoMap | null): void {
@@ -69,8 +88,10 @@ function stubSdk() {
         this.record.lat = latlng.getLat();
         this.record.lng = latlng.getLng();
       }
-      setContent(content: string): void {
-        this.record.content = content;
+      setContent(content: string | HTMLElement): void {
+        // 요소를 받아도 기록은 문자열로 남긴다. 그래야 기존 단언이 그대로 돈다.
+        this.record.content = typeof content === 'string' ? content : content.outerHTML;
+        this.record.element = typeof content === 'string' ? null : content;
       }
     },
   };
@@ -186,5 +207,40 @@ describe('지도 화면', () => {
     render(<MapView entries={[]} apiKey="" />);
 
     expect(await screen.findByText(/VITE_KAKAO_JS_KEY/)).toBeInTheDocument();
+  });
+  it('UC-LM-MAP-010: 마커를 누르면 그 줄의 id 로 onMarkerSelect 를 부른다', () => {
+    const { maps, calls } = stubSdk();
+    const onMarkerSelect = vi.fn();
+
+    render(<MapView entries={[found('a', '가', 37.5, 127.0)]} maps={maps} onMarkerSelect={onMarkerSelect} />);
+
+    // 리스너는 오버레이에 넘긴 **그 요소**에 걸려 있다. 클릭이 지도 컨테이너까지
+    // 버블되는지에 기대지 않으므로, SDK 가 이벤트를 어떻게 다루든 상관없다.
+    calls.overlays[0]?.element?.click();
+
+    expect(onMarkerSelect).toHaveBeenCalledWith('a');
+  });
+
+  it('UC-LM-MAP-011: 고른 항목의 마커에만 테가 둘린다', () => {
+    const { maps, calls } = stubSdk();
+
+    const entries = [found('a', '가', 37.5, 127.0), found('b', '나', 37.6, 127.1)];
+    const { rerender } = render(<MapView entries={entries} maps={maps} />);
+    rerender(<MapView entries={entries} maps={maps} focusedId="b" />);
+
+    // 어느 점을 고른 것인지 지도에서도 보여야 한다. 목록만 바뀌면 지도는 남의 일이 된다.
+    expect(calls.overlays[0]?.element?.className).not.toContain('marker--focused');
+    expect(calls.overlays[1]?.element?.className).toContain('marker--focused');
+  });
+
+  it('UC-LM-MAP-012: 범위를 맞출 때 지도를 덮은 만큼 안쪽으로 맞춘다', () => {
+    const { maps, calls } = stubSdk();
+
+    render(<MapView entries={[found('a', '가', 37.5, 127.0), found('b', '나', 37.6, 127.1)]} maps={maps} />);
+
+    // 여백 없이 맞추면 좁은 화면에서 마커 절반이 시트 뒤에 숨는다. jsdom 은 배치를
+    // 하지 않아 덮개가 0 이므로, 여기서 고정되는 것은 **여백 인자를 준다는 사실**이다.
+    expect(calls.bounds_padding).toHaveLength(1);
+    expect(calls.bounds_padding[0]).toHaveLength(4);
   });
 });
