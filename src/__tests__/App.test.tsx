@@ -1,9 +1,10 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { App } from '../App';
 import type { GeocodePort, GeocodeResult } from '../domain/types';
+import { decodeAddresses } from '../share/url-state';
 import { createStore } from '../state/store';
 
 /**
@@ -149,5 +150,54 @@ describe('앱 조립', () => {
     });
     // 멈춘 것은 실패가 아니다. 다시 눌러 이어 할 수 있어야 한다.
     expect(screen.getByRole('button', { name: '지도에 표시' })).toBeEnabled();
+  });
+
+  it('UC-LM-APP-008: 링크로 받은 주소를 복원하고 바로 조회한다', async () => {
+    render(<App port={port()} store={createStore()} hash="#a=%EC%84%9C%EC%9A%B8%20%EA%B0%95%EB%82%A8%EA%B5%AC%20%ED%85%8C%ED%97%A4%EB%9E%80%EB%A1%9C%20152" />);
+
+    // 받은 쪽에 버튼을 한 번 더 누르게 하지 않는다.
+    expect(screen.getByLabelText('주소 입력')).toHaveValue('서울 강남구 테헤란로 152');
+    await waitFor(() => {
+      expect(screen.getByText('찾음 1')).toBeInTheDocument();
+    });
+  });
+
+  it('UC-LM-APP-009: 망가진 해시로 열어도 빈 화면으로 시작한다', () => {
+    render(<App port={port()} store={createStore()} hash="#a=%E0%A4%A" />);
+
+    // 링크는 손으로 잘리고 붙는 물건이다. 던지면 사용자가 고칠 수 없는 고장이 된다.
+    expect(screen.getByLabelText('주소 입력')).toHaveValue('');
+    expect(screen.getByText(/아직 표시할 주소가 없다/)).toBeInTheDocument();
+  });
+
+  it('UC-LM-APP-010: 링크 복사는 입력창의 주소를 담은 주소를 클립보드에 넣는다', async () => {
+    const writeText = vi.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    render(<App port={port()} store={createStore()} clipboard={{ writeText }} />);
+
+    await userEvent.type(screen.getByLabelText('주소 입력'), '서울 중구 을지로 65');
+    await userEvent.click(screen.getByRole('button', { name: '링크 복사' }));
+
+    // 조회 전에도 링크를 보낼 수 있어야 하므로 목록이 아니라 입력창에서 만든다.
+    expect(writeText).toHaveBeenCalledTimes(1);
+    expect(decodeAddresses(new URL(writeText.mock.calls[0]?.[0] ?? '').hash)).toEqual(['서울 중구 을지로 65']);
+  });
+
+  it('UC-LM-APP-011: CSV 내려받기는 조회 결과를 파일로 건넨다', async () => {
+    const download = vi.fn<(content: string, fileName: string) => void>();
+    render(<App port={port()} store={createStore()} download={download} />);
+
+    expect(screen.getByRole('button', { name: 'CSV 내려받기' })).toBeDisabled();
+
+    await userEvent.type(screen.getByLabelText('주소 입력'), TWO_LINES);
+    await userEvent.click(screen.getByRole('button', { name: '지도에 표시' }));
+    await waitFor(() => {
+      expect(screen.getByText('찾음 1')).toBeInTheDocument();
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'CSV 내려받기' }));
+
+    const [content, fileName] = download.mock.calls[0] ?? [];
+    // 실패한 줄도 빠지지 않는다. 화면과 같은 원칙이다.
+    expect(content).toContain('있을 리 없는 주소');
+    expect(fileName).toMatch(/^location-maker-\d{4}-\d{2}-\d{2}\.csv$/);
   });
 });

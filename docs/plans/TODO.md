@@ -46,10 +46,10 @@
 | 31 | ~~`MapView.tsx` + 마커 관리~~ → 완료 (`markers.ts` 로 차이 계산 분리) | 에이전트 | M5 | 27 (직렬) | 30 | — |
 | 32 | ~~`use-fit-bounds.ts` (마커 1개 예외 포함)~~ → 완료. 좌표가 전부 같은 경우도 같이 막았다 | 에이전트 | M5 | 28 (직렬) | 31 | tdd-gate-workflow |
 | 33 | ~~어댑터를 Kakao 로 교체~~ → 완료. 키가 있으면 Kakao, 없으면 가짜로 떨어진다 | 에이전트 | M5 | 29 (직렬) | 32 | — |
-| 34 | M5 PR 리뷰·머지 — Fable 리뷰 → 승인 시 Claude 머지. **배포 주소에서 지도 확인은 사람** | 에이전트 + 사람 | M5 | 30 (직렬) | 33 | git-commit-workflow |
-| 35 | `url-state.ts` — 해시 인코딩·복원·자동 재조회 | 에이전트 | M6 | 31 (병렬) | 25 | tdd-gate-workflow |
-| 36 | `to-csv.ts` — 이스케이프 · BOM · 실패 항목 포함 | 에이전트 | M6 | 31 (병렬) | 25 | tdd-gate-workflow |
-| 37 | `download.ts` + 파일명에 날짜 | 에이전트 | M6 | 32 (직렬) | 35,36 | — |
+| 34 | ~~M5 PR 리뷰·머지~~ → 완료 (PR #6, 2026-09-16). **배포 주소에서 지도 확인은 아직 남음** | 에이전트 + 사람 | M5 | 30 (직렬) | 33 | git-commit-workflow |
+| 35 | ~~`url-state.ts` — 해시 인코딩·복원·자동 재조회~~ → 완료. 상한을 넘으면 자르지 않고 거절한다 | 에이전트 | M6 | 31 (병렬) | 25 | tdd-gate-workflow |
+| 36 | ~~`to-csv.ts` — 이스케이프 · BOM · 실패 항목 포함~~ → 완료. `건물명` 대신 `도로명주소` 열 | 에이전트 | M6 | 31 (병렬) | 25 | tdd-gate-workflow |
+| 37 | ~~`download.ts` + 파일명에 날짜~~ → 완료. 앱이 주입받아 테스트한다 | 에이전트 | M6 | 32 (직렬) | 35,36 | — |
 | 38 | M6 PR 리뷰·머지 — Fable 에이전트 리뷰 → 승인 시 Claude 머지 | 에이전트 | M6 | 33 (직렬) | 37 | git-commit-workflow |
 | 39 | `kakao-sdk-stub.ts` — SDK 라우트 가로채기 | 에이전트 | M7 | 34 (직렬) | 34,38 | journey-testing |
 | 40 | 저니 스펙 → `paste-and-plot.spec.ts` (7개 시나리오) | 에이전트 | M7 | 35 (직렬) | 39 | journey-testing |
