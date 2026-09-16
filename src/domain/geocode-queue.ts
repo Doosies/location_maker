@@ -36,7 +36,13 @@ function applyResult(entry: Entry, result: GeocodeResult): Entry {
  */
 export async function runGeocodeQueue(options: RunGeocodeQueueOptions): Promise<void> {
   const { entries, port, signal, onResult } = options;
-  const concurrency = Math.max(1, options.concurrency ?? DEFAULT_CONCURRENCY);
+  const requested = options.concurrency ?? DEFAULT_CONCURRENCY;
+  // NaN·소수·0 이 들어오면 워커 수 계산이 조용히 무너져 아무것도 조회하지 않는다.
+  const concurrency = Number.isFinite(requested) ? Math.max(1, Math.floor(requested)) : DEFAULT_CONCURRENCY;
+
+  // 프로퍼티로 직접 읽으면 앞선 검사 때문에 타입이 좁혀져, 뒤의 검사가
+  // "일어날 수 없는 비교" 로 잡힌다. abort 는 도중에 바뀌는 값이므로 매번 새로 읽는다.
+  const isAborted = () => signal?.aborted === true;
 
   let nextIndex = 0;
   // 쿼터가 막혔다면 나머지도 막힐 것이고, 계속 던지면 남은 한도까지 태운다.
@@ -45,20 +51,24 @@ export async function runGeocodeQueue(options: RunGeocodeQueueOptions): Promise<
 
   // 같은 곳을 두 번 조회하지 않는다. 진행 중인 조회를 공유해야
   // 같은 주소 셋이 동시에 출발하는 경우까지 한 번으로 접힌다.
-  const inFlight = new Map<string, Promise<GeocodeResult>>();
+  //
+  // **끝난 프라미스도 지우지 않는다.** 한 실행 안에서는 결과를 그대로 재사용한다 —
+  // 동시성 1 로 같은 주소가 차례로 와도 한 번만 물어보게 하려는 것이다.
+  // 실패도 재사용되므로, 재시도는 큐를 다시 부르는 쪽(M4)에서 한다.
+  const lookups = new Map<string, Promise<GeocodeResult>>();
 
   function lookup(entry: Entry): Promise<GeocodeResult> {
-    const shared = inFlight.get(entry.normalized);
+    const shared = lookups.get(entry.normalized);
     if (shared) return shared;
 
-    const pending = port.geocode(entry.raw, signal);
-    inFlight.set(entry.normalized, pending);
-    return pending;
+    const started = port.geocode(entry.raw, signal);
+    lookups.set(entry.normalized, started);
+    return started;
   }
 
   async function worker(): Promise<void> {
     while (true) {
-      if (quotaExceeded || signal?.aborted === true) return;
+      if (quotaExceeded || isAborted()) return;
 
       const index = nextIndex++;
       const entry = entries[index];
@@ -75,6 +85,15 @@ export async function runGeocodeQueue(options: RunGeocodeQueueOptions): Promise<
           ok: false,
           failure: { reason: 'sdk', message: error instanceof Error ? error.message : '조회에 실패했다' },
         };
+      }
+
+      // 중단 뒤에 도착한 실패는 사용자가 멈춘 결과이지 조회가 깨진 것이 아니다.
+      // signal 을 받은 어댑터는 AbortError 를 던지므로, 그대로 두면 화면에
+      // "실패" 로 뜬다. 되돌려 놓아야 "내가 멈췄는데 왜 실패지" 가 안 나온다.
+      // 성공은 살린다 — 이미 받은 좌표를 버릴 이유가 없다.
+      if (isAborted() && !result.ok) {
+        onResult({ ...entry, status: 'pending' });
+        return;
       }
 
       if (!result.ok && result.failure.reason === 'quota') {

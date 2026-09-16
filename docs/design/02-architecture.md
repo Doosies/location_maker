@@ -81,12 +81,12 @@ location_maker/
    ├─ main.tsx
    ├─ App.tsx
    ├─ domain/                // 순수 TS. import 는 같은 폴더뿐
-   │  ├─ types.ts
+   │  ├─ types.ts            // Entry 와 GeocodePort 계약이 여기 산다
    │  ├─ parse-addresses.ts
    │  ├─ geocode-queue.ts
    │  └─ __tests__/
    ├─ geocoding/
-   │  ├─ port.ts             // GeocodePort
+   │  ├─ port.ts             // domain/types 의 GeocodePort 를 re-export
    │  ├─ kakao-adapter.ts
    │  ├─ fake-adapter.ts
    │  └─ __tests__/

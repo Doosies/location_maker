@@ -147,20 +147,24 @@ describe('runGeocodeQueue', () => {
       .mockResolvedValue(found());
     const settled: Entry[] = [];
 
+    const touched = new Set<string>();
+
     const entries = entriesOf('주소 1', '주소 2', '주소 3', '주소 4', '주소 5', '주소 6');
     await runGeocodeQueue({
       entries,
       port: { geocode },
       concurrency: 1,
       onResult: (entry) => {
+        touched.add(entry.id);
         if (entry.status !== 'loading') settled.push(entry);
       },
     });
 
     expect(geocode).toHaveBeenCalledTimes(3);
     expect(settled.map((entry) => entry.status)).toEqual(['found', 'found', 'failed']);
-    // 손대지 않은 항목은 입력 그대로 pending 이다.
-    expect(entries.slice(3).every((entry) => entry.status === 'pending')).toBe(true);
+    // 큐는 입력 배열을 손대지 않으므로 entries 의 status 를 보면 무엇을 해도 통과한다.
+    // 남은 항목에 큐가 손을 대지 않았다는 것은 onResult 가 안 불렸다는 뜻이다.
+    expect(entries.slice(3).some((entry) => touched.has(entry.id))).toBe(false);
   });
 
   it('UC-LM-QUEUE-007: 중단 신호를 받으면 새로 시작하지 않는다', async () => {
@@ -168,12 +172,14 @@ describe('runGeocodeQueue', () => {
     const controller = new AbortController();
     const entries = entriesOf('주소 1', '주소 2', '주소 3', '주소 4');
 
+    const touched = new Set<string>();
+
     const running = runGeocodeQueue({
       entries,
       port,
       concurrency: 2,
       signal: controller.signal,
-      onResult: () => {},
+      onResult: (entry) => touched.add(entry.id),
     });
     await flush();
     expect(calls).toHaveLength(2);
@@ -183,7 +189,32 @@ describe('runGeocodeQueue', () => {
     await running;
 
     expect(calls).toHaveLength(2);
-    expect(entries.slice(2).every((entry) => entry.status === 'pending')).toBe(true);
+    expect(entries.slice(2).some((entry) => touched.has(entry.id))).toBe(false);
+  });
+
+  it('UC-LM-QUEUE-010: 중단 뒤에 도착한 실패는 pending 으로 되돌린다', async () => {
+    const { port, calls } = controllablePort();
+    const controller = new AbortController();
+    const entries = entriesOf('주소 1', '주소 2');
+    const settled: Entry[] = [];
+
+    const running = runGeocodeQueue({
+      entries,
+      port,
+      concurrency: 1,
+      signal: controller.signal,
+      onResult: (entry) => {
+        if (entry.status !== 'loading') settled.push(entry);
+      },
+    });
+    await flush();
+
+    controller.abort();
+    // abort 에 반응하는 어댑터는 값 대신 예외를 던진다.
+    calls[0]?.resolve(failedWith('sdk'));
+    await running;
+
+    expect(settled.map((entry) => entry.status)).toEqual(['pending']);
   });
 
   it('UC-LM-QUEUE-008: 같은 주소는 한 번만 조회한다', async () => {

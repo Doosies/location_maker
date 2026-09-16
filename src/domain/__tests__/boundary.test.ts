@@ -11,16 +11,27 @@ function stripComments(text: string): string {
   return text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
 }
 
-const sourceFiles = readdirSync(domainDir)
-  .filter((name) => name.endsWith('.ts'))
-  .map((name) => ({ name, text: stripComments(readFileSync(join(domainDir, name), 'utf8')) }));
+/** 하위 폴더까지 훑는다. `__tests__` 는 테스트라 경계 밖을 봐도 된다. */
+function collectSources(dir: string, prefix = ''): { name: string; text: string }[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const rel = prefix === '' ? entry.name : `${prefix}/${entry.name}`;
+    if (entry.isDirectory()) {
+      return entry.name === '__tests__' ? [] : collectSources(join(dir, entry.name), rel);
+    }
+    if (!/\.[cm]?tsx?$/.test(entry.name)) return [];
+    return [{ name: rel, text: stripComments(readFileSync(join(dir, entry.name), 'utf8')) }];
+  });
+}
+
+const sourceFiles = collectSources(domainDir);
 
 describe('도메인 경계', () => {
   it('UC-LM-BOUNDARY-001: 도메인은 같은 폴더 밖을 import 하지 않는다', () => {
     expect(sourceFiles.length).toBeGreaterThan(0);
 
     const outsideImports = sourceFiles.flatMap(({ name, text }) =>
-      [...text.matchAll(/(?:from|import)\s+'([^']+)'/g)]
+      // from '…' · from "…" · await import('…') · require('…') 를 모두 잡는다.
+      [...text.matchAll(/(?:from|import\s*\(|require\s*\()\s*['"]([^'"]+)['"]/g)]
         .map((match) => match[1] ?? '')
         .filter((specifier) => !specifier.startsWith('./'))
         .map((specifier) => `${name} → ${specifier}`),

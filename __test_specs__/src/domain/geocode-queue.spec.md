@@ -54,7 +54,16 @@ target: src/domain/__tests__/geocode-queue.test.ts
 
 - **Given** 큐가 도는 중에 `signal.abort()` 가 호출되고
 - **When** 진행 중이던 조회가 끝나면
-- **Then** 남은 항목은 `pending` 으로 남고 조회 횟수가 더 늘지 않는다
+- **Then** 남은 항목에는 손대지 않고 (콜백조차 오지 않고) 조회 횟수가 더 늘지 않는다
+
+### UC-LM-QUEUE-010 중단 뒤에 도착한 실패는 pending 으로 되돌린다
+
+중단은 실패가 아니다. `signal` 을 받은 어댑터는 진행 중이던 호출을 `AbortError` 로
+끊으므로, 그대로 두면 사용자가 멈춘 항목이 화면에 "실패" 로 뜬다.
+
+- **Given** 큐가 도는 중에 `signal.abort()` 가 호출되고
+- **When** 진행 중이던 조회가 실패로 끝나면
+- **Then** 그 항목은 `failed` 가 아니라 `pending` 으로 돌아간다 (이미 성공한 결과는 살린다)
 
 ### UC-LM-QUEUE-008 같은 주소는 한 번만 조회한다
 

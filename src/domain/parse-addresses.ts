@@ -23,9 +23,15 @@ function normalizeLine(line: string): string {
 // 내용에서 뽑으면 같아지므로 세는 수를 쓴다.
 let nextId = 0;
 
-/** 조회 키. 공백 차이만 있는 두 줄은 같은 곳으로 본다. */
+/**
+ * 조회 키. 공백 차이만 있는 두 줄은 같은 곳으로 본다.
+ *
+ * NFC 정규화가 필요한 이유: macOS 에서 복사한 한글은 자모가 분리된 NFD 로 온다.
+ * 눈에는 같은 '서울' 이지만 코드 포인트가 달라, 정규화하지 않으면 같은 주소를
+ * 두 번 조회하게 된다.
+ */
 function toLookupKey(address: string): string {
-  return address.replace(/\s+/g, ' ').toLowerCase();
+  return address.normalize('NFC').replace(/\s+/g, ' ').toLowerCase();
 }
 
 /**
