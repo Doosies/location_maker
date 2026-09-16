@@ -32,11 +32,11 @@
 | 17 | ~~`fake-adapter.ts` + 계약 테스트~~ → 완료. 계약 테스트는 두 구현에 함께 돈다 | 에이전트 | M3 | 15 (직렬) | 16 | tdd-gate-workflow |
 | 18 | ~~`kakao-adapter.ts` (addressSearch → keywordSearch 폴백)~~ → 완료 | 에이전트 | M3 | 16 (직렬) | 17 | external-library-usage |
 | 19 | **HOLD-3** M3 PR 리뷰·머지 | **사람** | M3 | 17 (직렬) | 18 | git-commit-workflow |
-| 20 | `state/store.ts` — 순서 불변식 테스트 포함 | 에이전트 | M4 | 18 (직렬) | 19 | tdd-gate-workflow |
-| 21 | `AddressInput.tsx` | 에이전트 | M4 | 19 (병렬) | 20 | design-system |
-| 22 | `ResultList.tsx` · `ResultItem.tsx` (실패 항목 자리 보존) | 에이전트 | M4 | 19 (병렬) | 20 | design-system |
-| 23 | 진행 표시 · 중단 버튼 | 에이전트 | M4 | 19 (병렬) | 20 | — |
-| 24 | `App.tsx` 조립 (가짜 어댑터 주입) · 반응형 · 접근성 | 에이전트 | M4 | 20 (직렬) | 21,22,23 | design-system |
+| 20 | ~~`state/store.ts` — 순서 불변식 테스트 포함~~ → 완료 | 에이전트 | M4 | 18 (직렬) | 19 | tdd-gate-workflow |
+| 21 | ~~`AddressInput.tsx`~~ → 완료 | 에이전트 | M4 | 19 (병렬) | 20 | design-system |
+| 22 | ~~`ResultList.tsx` · `ResultItem.tsx` (실패 항목 자리 보존)~~ → 완료 | 에이전트 | M4 | 19 (병렬) | 20 | design-system |
+| 23 | ~~진행 표시 · 중단 버튼~~ → 완료 (`ProgressBar.tsx`) | 에이전트 | M4 | 19 (병렬) | 20 | — |
+| 24 | ~~`App.tsx` 조립 (가짜 어댑터 주입) · 반응형 · 접근성~~ → 완료 | 에이전트 | M4 | 20 (직렬) | 21,22,23 | design-system |
 | 25 | **HOLD-3** M4 PR 리뷰·머지 | **사람** | M4 | 21 (직렬) | 24 | git-commit-workflow |
 | 26 | **HOLD-5** Kakao 앱 생성 + 무료 쿼터가 다른 앱에 붙어있는지 확인 | **사람** | M5 | 22 (직렬) | 25 | — |
 | 27 | **HOLD-6** JavaScript 앱키 발급 → Secrets `KAKAO_JS_KEY` 등록 | **사람** | M5 | 23 (직렬) | 26 | — |
@@ -73,7 +73,7 @@
 | 28 | 도메인 2개 등록 | Kakao 콘솔 → 플랫폼 → Web | M5 착수 전 |
 | 29 | `.env.local` 작성 | 로컬 파일 | M5 착수 전 |
 | 43 | 실연동 검증 | 브라우저 · 로컬 터미널 | M7 후 |
-| 8·13·19·25·34·38·44 | 단계별 PR 리뷰·머지 | GitHub | 각 단계 끝 |
+| ~~8·13·19·25·34·38·44~~ | ~~단계별 PR 리뷰·머지~~ → 2026-09-16 지시로 사람 개입 없음 (Fable 리뷰 → Claude 머지) | GitHub | 각 단계 끝 |
 
 ## 막혔을 때 우회 경로
 

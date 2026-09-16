@@ -20,6 +20,11 @@
 | `LM-BOUNDARY` | `src/domain/__tests__/boundary.test.ts` | `src/domain/` 이 바깥을 끌어오지 않는지 |
 | `LM-PORT` | `src/geocoding/__tests__/port-contract.test.ts` | `GeocodePort` 계약 — 두 구현 공통 |
 | `LM-KAKAO` | `src/geocoding/__tests__/kakao-adapter.test.ts` | Kakao 어댑터 — 좌표 축·콜백·status 분류 |
+| `LM-STORE` | `src/state/__tests__/store.test.ts` | 항목 배열과 순서 불변식 |
+| `LM-INPUT` | `src/ui/__tests__/AddressInput.test.tsx` | 주소 입력 — 줄 수·버튼 상태 |
+| `LM-LIST` | `src/ui/__tests__/ResultList.test.tsx` | 결과 목록 — 실패 항목 자리 보존 |
+| `LM-PROGRESS` | `src/ui/__tests__/ProgressBar.test.tsx` | 진행 표시와 중단 |
+| `LM-APP` | `src/__tests__/App.test.tsx` | 파싱→큐→스토어→화면 연결 |
 
 ## 아직 쓰지 않은 PREFIX
 
@@ -27,9 +32,6 @@
 
 | PREFIX | 대상 | 단계 |
 | --- | --- | --- |
-| `LM-STORE` | 상태 저장소와 순서 불변식 | M4 |
-| `LM-INPUT` | 주소 입력 컴포넌트 | M4 |
-| `LM-LIST` | 결과 목록 컴포넌트 | M4 |
 | `LM-BOUNDS` | 지도 범위 계산 | M5 |
 | `LM-URL` | 링크 공유용 해시 인코딩 | M6 |
 | `LM-CSV` | CSV 내보내기 | M6 |

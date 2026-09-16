@@ -39,3 +39,246 @@ body {
 .map-placeholder p:last-child {
   margin-bottom: 0;
 }
+
+/* ── 레이아웃 ─────────────────────────────────────────────────────────────── */
+/* 넓은 화면은 좌 패널 + 우 지도, 좁은 화면은 한 줄로 쌓인다. 400px 에서 가로
+   스크롤이 생기지 않아야 하므로 어디에도 고정 최소 폭을 두지 않는다. */
+.app__body {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 52rem) {
+  .app {
+    max-width: 75rem;
+  }
+
+  .app__body {
+    grid-template-columns: 25rem minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.app__panel {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.app__map {
+  min-width: 0;
+}
+
+.app__map-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  opacity: 0.75;
+}
+
+/* ── 버튼 ─────────────────────────────────────────────────────────────────── */
+.button {
+  /* 손가락으로 누를 수 있어야 한다. */
+  min-height: 2.75rem;
+  padding: 0 0.9rem;
+  border: 1px solid currentColor;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.button--primary {
+  border-color: #1d4ed8;
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.button--primary:disabled {
+  /* 배경을 지우고 테두리만 남긴다. 파란 덩어리가 회색으로만 바뀌면 눌러도 되는 줄 안다. */
+  background: transparent;
+  border-color: currentColor;
+  color: inherit;
+}
+
+.button--danger:not(:disabled) {
+  color: #b91c1c;
+}
+
+.button--small {
+  min-height: 2.25rem;
+  padding: 0 0.6rem;
+  font-size: 0.875rem;
+}
+
+/* ── 입력 ─────────────────────────────────────────────────────────────────── */
+.address-input__label {
+  display: block;
+  font-weight: 600;
+}
+
+.address-input__hint {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 0.875rem;
+  opacity: 0.75;
+}
+
+.address-input__field {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem;
+  border: 1px solid currentColor;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  resize: vertical;
+}
+
+.address-input__count {
+  margin: 0.4rem 0 0.6rem;
+  font-size: 0.875rem;
+  opacity: 0.75;
+}
+
+.address-input__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* ── 진행 표시 ────────────────────────────────────────────────────────────── */
+.progress__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.progress__text {
+  margin: 0;
+}
+
+.progress__track {
+  margin-top: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  overflow: hidden;
+}
+
+.progress__fill {
+  height: 100%;
+  background: currentColor;
+  transition: width 120ms linear;
+}
+
+/* ── 결과 목록 ────────────────────────────────────────────────────────────── */
+.result-list__empty {
+  margin: 0;
+  opacity: 0.75;
+}
+
+.result-list__summary {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+}
+
+.chip {
+  padding: 0.15rem 0.6rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.875rem;
+}
+
+.chip--failed {
+  color: #b91c1c;
+}
+
+.result-list__items {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.result-item {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: 0.6rem;
+  padding: 0.6rem;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 0.375rem;
+}
+
+.result-item--notFound,
+.result-item--failed {
+  border-color: #b91c1c;
+}
+
+.result-item--skipped {
+  opacity: 0.6;
+}
+
+.result-item__badge {
+  display: grid;
+  place-items: center;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+
+.result-item__body {
+  min-width: 0;
+}
+
+.result-item__raw {
+  margin: 0;
+  /* 긴 주소가 잘리지 않고 접힌다. 자르면 어느 줄이 실패했는지 알 수 없다. */
+  overflow-wrap: anywhere;
+}
+
+.result-item__detail {
+  margin: 0.15rem 0 0;
+  font-size: 0.875rem;
+  opacity: 0.8;
+  overflow-wrap: anywhere;
+}
+
+.result-item__tag {
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+
+.result-item__status {
+  display: inline-block;
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.result-item__actions {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}

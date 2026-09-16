@@ -80,8 +80,7 @@ export interface GeocodePort {
 
 어댑터를 쓰기 전에 [Kakao SDK 실제 시그니처](../findings/kakao-sdk.md) 를 먼저 읽는다.
 
-### 2. 가짜 어댑터 — `src/geocoding/results.ts
-src/geocoding/fake-adapter.ts`
+### 2. 가짜 어댑터 — `src/geocoding/fake-adapter.ts`
 
 - 고정 주소 테이블을 들고 있다 (`테헤란로 152` → 좌표 등)
 - 테이블에 없으면 `zero_result`
