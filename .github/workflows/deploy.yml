@@ -25,6 +25,16 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      # @cas/spec-sync 는 비공개 저장소(common_agent_system)에 있다.
+      # 토큰을 URL 에 박으면 로그·락파일로 새기 쉬우므로 credential helper 로만 넘긴다.
+      - name: 비공개 저장소 접근 설정
+        env:
+          CAS_READ_TOKEN: ${{ secrets.CAS_READ_TOKEN }}
+        run: |
+          git config --global credential."https://github.com".helper \
+            '!f() { echo username=x-access-token; echo password=$CAS_READ_TOKEN; }; f'
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git config --global --add url."https://github.com/".insteadOf "ssh://git@github.com/"
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - run: pnpm build

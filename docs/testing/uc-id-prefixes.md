@@ -2,18 +2,29 @@
 
 테스트 제목은 `UC-<PREFIX>-<NNN>: ...` 으로 시작한다. PREFIX 는 저장소 전역에서 유일하고,
 번호는 append-only 다 — 테스트를 지워도 번호를 재사용하지 않는다. 짝이 되는 스펙 문서는
-`__test_specs__/` 아래에 테스트 경로를 미러링해 둔다.
+`__test_specs__/` 아래에 테스트 경로를 미러링해 둔다 (`__tests__` 한 마디가 빠지고
+`.test.ts` 가 `.spec.md` 가 된다).
 
-규약의 출처는 `common_agent_system` 의 UC ID 규약이다. 자세한 배경은
+이 표는 `@cas/spec-sync` 가 읽는다. 여기 없는 PREFIX 를 쓰면 테스트가 실패한다.
+아래 표의 형식(`| PREFIX | 테스트 경로 |`)은 검증기가 파싱하는 형식이므로 바꾸지 않는다.
+
+규약의 출처는 `common_agent_system` 의 UC ID 규약이다. 배경은
 [설계 문서 §9](../design/02-architecture.md#9-테스트) 에 있다.
+
+| PREFIX | 테스트 | 대상 |
+| --- | --- | --- |
+| `LM-SPEC-SYNC` | `src/__tests__/spec-sync.test.ts` | 스펙 ↔ 테스트 짝 검사 자체 |
+| `LM-SHELL` | `src/ui/__tests__/MapPlaceholder.test.tsx` | 앱 껍데기, 키 없을 때의 안내 |
+| `LM-PARSE` | `src/domain/__tests__/parse-addresses.test.ts` | 붙여넣은 텍스트를 주소 줄로 나누기 |
+| `LM-QUEUE` | `src/domain/__tests__/geocode-queue.test.ts` | 지오코딩 큐 — 동시 실행·중단·쿼터 |
+| `LM-BOUNDARY` | `src/domain/__tests__/boundary.test.ts` | `src/domain/` 이 바깥을 끌어오지 않는지 |
+
+## 아직 쓰지 않은 PREFIX
+
+다음 단계에서 쓸 자리다. 테스트를 만들 때 위 표로 옮긴다.
 
 | PREFIX | 대상 | 단계 |
 | --- | --- | --- |
-| `LM-SHELL` | 앱 껍데기 — 키가 없을 때의 안내를 포함한다 | M1 |
-| `LM-SPEC-SYNC` | 스펙 ↔ 테스트 짝 검사 자체 | M1 |
-| `LM-PARSE` | 붙여넣은 텍스트를 주소 줄로 나누기 | M2 |
-| `LM-QUEUE` | 지오코딩 큐 — 동시 실행, 중단, 쿼터 처리 | M2 |
-| `LM-BOUNDARY` | `src/domain/` 이 바깥을 끌어오지 않는지 | M2 |
 | `LM-PORT` | `GeocodePort` 계약 | M3 |
 | `LM-KAKAO` | Kakao 어댑터 | M3 |
 | `LM-STORE` | 상태 저장소와 순서 불변식 | M4 |

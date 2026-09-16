@@ -18,6 +18,7 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@cas/spec-sync": "git+https://github.com/Doosies/common_agent_system.git#cfbe60f924af901aa0871f2b355471562a3def8b&path:/packages/spec-sync",
     "@playwright/test": "^1.56.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.9.0",
